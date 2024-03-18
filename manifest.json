@@ -1,0 +1,11 @@
+{
+	"id": "the-plugin",
+	"name": "The Plugin",
+	"description": "",
+	"author": "aoout",
+	"authorUrl": "https://github.com/aoout",
+
+	"isDesktopOnly": false,
+	"minAppVersion": "0.16.0",
+	"version": "0.0.1"
+}
