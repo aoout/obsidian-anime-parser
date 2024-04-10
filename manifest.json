@@ -1,7 +1,7 @@
 {
-	"id": "the-plugin",
-	"name": "The Plugin",
-	"description": "",
+	"id": "anime-parser",
+	"name": "Anime Parser",
+	"description": "Parse a local directory to a anime.",
 	"author": "aoout",
 	"authorUrl": "https://github.com/aoout",
 
