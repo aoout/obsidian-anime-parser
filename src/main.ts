@@ -36,7 +36,6 @@ export default class AnimeParserPlugin extends Plugin {
 			await new Promise((resolve) => setTimeout(resolve, 500));
 		}
 	}
-
 	async parseAnime(path: string) {
 		const name = new Path(path).name;
 		const data = await bangumiApi.search(name);
@@ -51,11 +50,22 @@ export default class AnimeParserPlugin extends Plugin {
 		const episodes = await bangumiApi.getEpisodes(id);
 		const episodeNames = episodes.map((ep) => ep["name_cn"]);
 
-		const videos = parseEpisode(
-			jetpack.find(path, { matching: ["*.mp4", "*.mkv"], recursive: false })
-		);
+		const videos = jetpack.find(path, { matching: ["*.mp4", "*.mkv"], recursive: false });
+		const videos2 = parseEpisode(videos);
+		videos.forEach((video) => {
+			if (
+				new Path(video).name !=
+				(videos2.indexOf(video) + 1).toString() + "." + new Path(video).suffix
+			) {
+				jetpack.rename(
+					video,
+					(videos2.indexOf(video) + 1).toString() + "." + new Path(video).suffix
+				);
+			}
+		});
+		const videos3 = jetpack.find(path, { matching: ["*.mp4", "*.mkv"], recursive: false });
 
-		const content = videos
+		const content = videos3
 			.map(
 				(video, index) =>
 					`- [ep${index + 1}. ${episodeNames[index]}](${video.replaceAll(" ", "%20")})`
