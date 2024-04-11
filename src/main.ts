@@ -70,7 +70,7 @@ export default class AnimeParserPlugin extends Plugin {
 		};
 
 		await this.app.vault.create(
-			name + ".md",
+			this.settings.savePath + "/" + name + ".md",
 			tFrontmatter(
 				parseYaml(templateWithVariables(this.settings.propertysTemplate, variables))
 			) +

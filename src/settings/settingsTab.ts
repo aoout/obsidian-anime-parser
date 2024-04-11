@@ -13,6 +13,16 @@ export class AnimeParserSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
+			.setName("savePath")
+			.setDesc("savePath")
+			.addText((text) =>
+				text.setValue(this.plugin.settings.savePath).onChange(async (value) => {
+					this.plugin.settings.savePath = value;
+					await this.plugin.saveSettings();
+				})
+			);
+
+		new Setting(containerEl)
 			.setName("propertysTemplate")
 			.setDesc("propertysTemplate")
 			.addTextArea((text) =>
