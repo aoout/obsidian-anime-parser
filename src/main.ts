@@ -1,5 +1,5 @@
 import { request, Plugin, parseYaml } from "obsidian";
-import { Modal } from "./modal";
+import { AnimeParserModal } from "./modal";
 import { Path } from "./utils/path";
 import jetpack from "fs-jetpack";
 import { tFrontmatter } from "./utils/obsidianUtils";
@@ -15,7 +15,7 @@ export default class AnimeParserPlugin extends Plugin {
 			id: "anime-parsing",
 			name: "Parse a local directory to a anime",
 			callback: () => {
-				new Modal(this.app, async (input) => {
+				new AnimeParserModal(this.app, async (input) => {
 					await this.parseAnime(input);
 				}).open();
 			},
