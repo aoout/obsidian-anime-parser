@@ -77,7 +77,7 @@ export default class AnimeParserPlugin extends Plugin {
 			summary: summary.replaceAll(/\n/g, ""),
 			tags: tags,
 		};
-		const notePath = this.settings.savePath ? this.settings.savePath + "/" : "" + name + ".md";
+		const notePath = this.settings.savePath ? this.settings.savePath + "/" + name + ".md" : name + ".md";
 		if (!this.app.vault.getAbstractFileByPath(notePath)) {
 			await this.app.vault.create(
 				notePath,
