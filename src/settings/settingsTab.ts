@@ -16,12 +16,10 @@ export class AnimeParserSettingTab extends PluginSettingTab {
 			.setName("propertysTemplate")
 			.setDesc("propertysTemplate")
 			.addTextArea((text) =>
-				text
-					.setValue(this.plugin.settings.propertysTemplate)
-					.onChange(async (value) => {
-						this.plugin.settings.propertysTemplate = value;
-						await this.plugin.saveSettings();
-					})
+				text.setValue(this.plugin.settings.propertysTemplate).onChange(async (value) => {
+					this.plugin.settings.propertysTemplate = value;
+					await this.plugin.saveSettings();
+				})
 			);
 	}
 }

@@ -1,8 +1,8 @@
-import { request, Plugin, parseYaml } from "obsidian";
+import { Plugin, parseYaml } from "obsidian";
 import { AnimeParserModal } from "./modal";
 import { Path } from "./utils/path";
 import jetpack from "fs-jetpack";
-import { tFrontmatter } from "./utils/obsidianUtils";
+import { request2, tFrontmatter } from "./utils/obsidianUtils";
 import { AnimeParserSettings, DEFAULT_SETTINGS } from "./settings/settings";
 import { AnimeParserSettingTab } from "./settings/settingsTab";
 
@@ -32,37 +32,28 @@ export default class AnimeParserPlugin extends Plugin {
 
 	async parseAnime(path: string) {
 		const name = new Path(path).name;
-		const data = await request({
-			url: "https://api.bgm.tv/v0/search/subjects",
-			method: "POST",
-			body: JSON.stringify({
-				keyword: name,
-				filter: {
-					type: [2],
-				},
-			}),
-		});
-		const id = JSON.parse(data)["data"][0]["id"];
 
-		const anime = JSON.parse(
-			await request({
-				url: `https://api.bgm.tv/v0/subjects/${id}`,
-				method: "GET",
-			})
-		);
+		const data = await request2("https://api.bgm.tv/v0/search/subjects", "POST", {
+			keyword: name,
+			filter: {
+				type: [2],
+			},
+		});
+
+		const id = data["data"][0]["id"];
+
+		const anime = await request2(`https://api.bgm.tv/v0/subjects/${id}`, "GET");
 
 		const cover = anime["images"]["common"];
 		const summary = anime["summary"];
 		// const tags= anime["tags"].map((tag)=>tag["name"]);
 		const tags = ["anime"];
 
-		const episodes = JSON.parse(
-			await request({
-				url: `https://api.bgm.tv/v0/episodes?subject_id=${id}&type=0`,
-				method: "GET",
-			})
-		)["data"];
-		const episodeNames = episodes.map((ep) => ep["name_cn"]);
+		const episodes = await request2("https://api.bgm.tv/v0/episodes", "GET", {
+			subject_id: id,
+			type: 0,
+		});
+		const episodeNames = episodes["data"].map((ep) => ep["name_cn"]);
 
 		const videos = jetpack.find(path, { matching: ["*.mp4", "*.mkv"], recursive: false });
 

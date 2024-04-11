@@ -3,5 +3,5 @@ export interface AnimeParserSettings {
 }
 
 export const DEFAULT_SETTINGS: AnimeParserSettings = {
-	propertysTemplate: "cover: {{cover}}"
+	propertysTemplate: "cover: {{cover}}",
 };
