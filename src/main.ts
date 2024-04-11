@@ -1,22 +1,23 @@
-import { request, Plugin, Editor } from "obsidian";
+import { request, Plugin } from "obsidian";
 import { Modal } from "./modal";
 import { Path } from "./utils/path";
 import jetpack from "fs-jetpack";
+import { tFrontmatter } from "./utils/obsidianUtils";
 
 export default class ThePlugin extends Plugin {
 	async onload() {
 		this.addCommand({
 			id: "anime-parsing",
 			name: "Parse a local directory to a anime",
-			editorCallback: (editor: Editor) => {
+			callback: () => {
 				new Modal(this.app, async (input) => {
-					await this.parseAnime(editor, input);
+					await this.parseAnime(input);
 				}).open();
 			},
 		});
 	}
 
-	async parseAnime(editor:Editor,path:string) {
+	async parseAnime(path: string) {
 		const name = new Path(path).name;
 		const data = await request({
 			url: "https://api.bgm.tv/v0/search/subjects",
@@ -28,25 +29,43 @@ export default class ThePlugin extends Plugin {
 				},
 			}),
 		});
-		const anime = JSON.parse(data)["data"][0];
-		const id = anime["id"];
-		console.log(id);
+		const id = JSON.parse(data)["data"][0]["id"];
+
+		const anime = JSON.parse(
+			await request({
+				url: `https://api.bgm.tv/v0/subjects/${id}`,
+				method: "GET",
+			})
+		);
+
+		const cover = anime["images"]["common"];
+		const summary = anime["summary"];
+		// const tags= anime["tags"].map((tag)=>tag["name"]);
+		const tags = ["anime"];
+
 		const episodes = JSON.parse(
 			await request({
 				url: `https://api.bgm.tv/v0/episodes?subject_id=${id}&type=0`,
-				method: "GET"
+				method: "GET",
 			})
 		)["data"];
-		const episodeNames = episodes.map(ep=>ep["name_cn"]);
-		console.log(episodeNames);
-		// TODO: 读取path根目录下文件列表，将链接列表输入activeFile
-		const videos = jetpack.find(path,{matching:["*.mp4"],recursive:false});
-		console.log(videos);
+		const episodeNames = episodes.map((ep) => ep["name_cn"]);
 
-		const content = videos.map((video,index) => `- [${episodeNames[index]}](${video})`).join("\n");
-		editor.replaceRange(
-			content,
-			editor.getCursor()
+		const videos = jetpack.find(path, { matching: ["*.mp4","*.mkv"], recursive: false });
+
+		const content = videos
+			.map((video, index) => `- [ep${index + 1}. ${episodeNames[index]}](${video.replaceAll(" ","%20")})`)
+			.join("\n");
+
+		await this.app.vault.create(
+			name + ".md",
+			tFrontmatter({
+				cover: cover,
+				summary: summary,
+				tags: tags,
+			}) +
+				"\n" +
+				content
 		);
 	}
 }
