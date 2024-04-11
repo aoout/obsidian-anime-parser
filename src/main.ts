@@ -5,6 +5,7 @@ import jetpack from "fs-jetpack";
 import { request2, tFrontmatter, templateWithVariables } from "./utils/obsidianUtils";
 import { AnimeParserSettings, DEFAULT_SETTINGS } from "./settings/settings";
 import { AnimeParserSettingTab } from "./settings/settingsTab";
+import { parseEpisode } from "./lib/parser";
 
 export default class AnimeParserPlugin extends Plugin {
 	settings: AnimeParserSettings;
@@ -54,7 +55,7 @@ export default class AnimeParserPlugin extends Plugin {
 		});
 		const episodeNames = episodes["data"].map((ep) => ep["name_cn"]);
 
-		const videos = jetpack.find(path, { matching: ["*.mp4", "*.mkv"], recursive: false });
+		const videos = parseEpisode(jetpack.find(path, { matching: ["*.mp4", "*.mkv"], recursive: false }));
 
 		const content = videos
 			.map(
