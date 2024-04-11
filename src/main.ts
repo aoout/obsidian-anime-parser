@@ -51,16 +51,15 @@ export default class AnimeParserPlugin extends Plugin {
 		const episodeNames = episodes.map((ep) => ep["name_cn"]);
 
 		const videos = jetpack.find(path, { matching: ["*.mp4", "*.mkv"], recursive: false });
+		const maxLength = videos.length.toString().length;
 		const videos2 = parseEpisode(videos);
 		videos.forEach((video) => {
-			if (
-				new Path(video).name !=
-				(videos2.indexOf(video) + 1).toString() + "." + new Path(video).suffix
-			) {
-				jetpack.rename(
-					video,
-					(videos2.indexOf(video) + 1).toString() + "." + new Path(video).suffix
-				);
+			let newName = (videos2.indexOf(video) + 1).toString() + "." + new Path(video).suffix;
+			if (new Path(newName).stem.length < maxLength) {
+				newName = (maxLength - new Path(newName).stem.length) * 0 + newName;
+			}
+			if (new Path(video).name != newName) {
+				jetpack.rename(video, newName);
 			}
 		});
 		const videos3 = jetpack.find(path, { matching: ["*.mp4", "*.mkv"], recursive: false });
@@ -77,7 +76,9 @@ export default class AnimeParserPlugin extends Plugin {
 			summary: summary.replaceAll(/\n/g, ""),
 			tags: tags,
 		};
-		const notePath = this.settings.savePath ? this.settings.savePath + "/" + name + ".md" : name + ".md";
+		const notePath = this.settings.savePath
+			? this.settings.savePath + "/" + name + ".md"
+			: name + ".md";
 		if (!this.app.vault.getAbstractFileByPath(notePath)) {
 			await this.app.vault.create(
 				notePath,
