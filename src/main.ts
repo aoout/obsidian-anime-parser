@@ -1,11 +1,16 @@
-import { request, Plugin } from "obsidian";
+import { request, Plugin, parseYaml } from "obsidian";
 import { Modal } from "./modal";
 import { Path } from "./utils/path";
 import jetpack from "fs-jetpack";
 import { tFrontmatter } from "./utils/obsidianUtils";
+import { AnimeParserSettings, DEFAULT_SETTINGS } from "./settings/settings";
+import { AnimeParserSettingTab } from "./settings/settingsTab";
 
-export default class ThePlugin extends Plugin {
+export default class AnimeParserPlugin extends Plugin {
+	settings: AnimeParserSettings;
 	async onload() {
+		await this.loadSettings();
+		this.addSettingTab(new AnimeParserSettingTab(this.app, this));
 		this.addCommand({
 			id: "anime-parsing",
 			name: "Parse a local directory to a anime",
@@ -15,6 +20,14 @@ export default class ThePlugin extends Plugin {
 				}).open();
 			},
 		});
+	}
+
+	async loadSettings(): Promise<void> {
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+	}
+
+	async saveSettings(): Promise<void> {
+		await this.saveData(this.settings);
 	}
 
 	async parseAnime(path: string) {
@@ -51,21 +64,26 @@ export default class ThePlugin extends Plugin {
 		)["data"];
 		const episodeNames = episodes.map((ep) => ep["name_cn"]);
 
-		const videos = jetpack.find(path, { matching: ["*.mp4","*.mkv"], recursive: false });
+		const videos = jetpack.find(path, { matching: ["*.mp4", "*.mkv"], recursive: false });
 
 		const content = videos
-			.map((video, index) => `- [ep${index + 1}. ${episodeNames[index]}](${video.replaceAll(" ","%20")})`)
+			.map(
+				(video, index) =>
+					`- [ep${index + 1}. ${episodeNames[index]}](${video.replaceAll(" ", "%20")})`
+			)
 			.join("\n");
 
-		await this.app.vault.create(
-			name + ".md",
-			tFrontmatter({
-				cover: cover,
-				summary: summary,
-				tags: tags,
-			}) +
-				"\n" +
-				content
+		const variables = new Map<string, string>([
+			["cover", cover],
+			["summary", summary.replaceAll(/\n/g, "")],
+			["tags", tags],
+		]);
+		const propertys = parseYaml(
+			Array.from(variables).reduce(
+				(template, [key, value]) => template.replaceAll(`{{${key}}}`, value),
+				this.settings.propertysTemplate
+			)
 		);
+		await this.app.vault.create(name + ".md", tFrontmatter(propertys) + "\n" + content);
 	}
 }
