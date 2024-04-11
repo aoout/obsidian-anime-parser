@@ -14,7 +14,7 @@ export default class AnimeParserPlugin extends Plugin {
 		this.addSettingTab(new AnimeParserSettingTab(this.app, this));
 		this.addCommand({
 			id: "sync the animes library",
-			name: "sync the animes library to obsidian",
+			name: "Sync the animes library to obsidian",
 			callback: async () => {
 				await this.syncLibrary();
 			},
