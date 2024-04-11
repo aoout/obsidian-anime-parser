@@ -2,7 +2,7 @@ import { Plugin, parseYaml } from "obsidian";
 import { AnimeParserModal } from "./modal";
 import { Path } from "./utils/path";
 import jetpack from "fs-jetpack";
-import { request2, tFrontmatter } from "./utils/obsidianUtils";
+import { request2, tFrontmatter, templateWithVariables } from "./utils/obsidianUtils";
 import { AnimeParserSettings, DEFAULT_SETTINGS } from "./settings/settings";
 import { AnimeParserSettingTab } from "./settings/settingsTab";
 
@@ -46,8 +46,7 @@ export default class AnimeParserPlugin extends Plugin {
 
 		const cover = anime["images"]["common"];
 		const summary = anime["summary"];
-		// const tags= anime["tags"].map((tag)=>tag["name"]);
-		const tags = ["anime"];
+		const tags = anime["tags"].map((tag) => tag["name"]);
 
 		const episodes = await request2("https://api.bgm.tv/v0/episodes", "GET", {
 			subject_id: id,
@@ -64,17 +63,19 @@ export default class AnimeParserPlugin extends Plugin {
 			)
 			.join("\n");
 
-		const variables = new Map<string, string>([
-			["cover", cover],
-			["summary", summary.replaceAll(/\n/g, "")],
-			["tags", tags],
-		]);
-		const propertys = parseYaml(
-			Array.from(variables).reduce(
-				(template, [key, value]) => template.replaceAll(`{{${key}}}`, value),
-				this.settings.propertysTemplate
-			)
+		const variables = {
+			cover: cover,
+			summary: summary.replaceAll(/\n/g, ""),
+			tags: tags,
+		};
+
+		await this.app.vault.create(
+			name + ".md",
+			tFrontmatter(
+				parseYaml(templateWithVariables(this.settings.propertysTemplate, variables))
+			) +
+				"\n" +
+				content
 		);
-		await this.app.vault.create(name + ".md", tFrontmatter(propertys) + "\n" + content);
 	}
 }

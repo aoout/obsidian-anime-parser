@@ -53,3 +53,10 @@ export async function request2(url: string, method: string, params?: object) {
 		);
 	}
 }
+
+export function templateWithVariables(template: string, variables: object) {
+	return Object.keys(variables).reduce(
+		(template, key) => template.replaceAll(`{{${key}}}`, variables[key]),
+		template
+	);
+}
