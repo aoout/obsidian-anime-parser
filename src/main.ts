@@ -133,7 +133,7 @@ export default class AnimeParserPlugin extends Plugin {
 	async syncBangumi(currentFile: TFile) {
 		const frontmatter = this.app.metadataCache.getFileCache(currentFile)?.frontmatter;
 		const progress = frontmatter["progress"];
-		const id = frontmatter["bangumiApi"];
+		const id = frontmatter["bangumiID"];
 		await bangumiApi.updateProgress(this.settings.accessToken, id, progress);
 	}
 }
