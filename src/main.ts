@@ -26,6 +26,13 @@ export default class AnimeParserPlugin extends Plugin {
 				await this.playAnime(this.app.workspace.getActiveFile());
 			},
 		});
+		this.addCommand({
+			id: "sync the bangumi",
+			name: "Sync the progress of current anime to bangumi",
+			callback: async () => {
+				await this.syncBangumi(this.app.workspace.getActiveFile());
+			},
+		});
 	}
 
 	async loadSettings(): Promise<void> {
@@ -80,6 +87,7 @@ export default class AnimeParserPlugin extends Plugin {
 
 		const variables = {
 			cover: cover,
+			id: id,
 			summary: summary.replaceAll(/\n/g, ""),
 			tags: tags,
 		};
@@ -120,5 +128,12 @@ export default class AnimeParserPlugin extends Plugin {
 				source: `file:///${videoUrl}`,
 			},
 		});
+	}
+
+	async syncBangumi(currentFile: TFile) {
+		const frontmatter = this.app.metadataCache.getFileCache(currentFile)?.frontmatter;
+		const progress = frontmatter["progress"];
+		const id = frontmatter["bangumiApi"];
+		await bangumiApi.updateProgress(this.settings.accessToken, id, progress);
 	}
 }

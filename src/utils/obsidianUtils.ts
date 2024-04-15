@@ -4,7 +4,20 @@ export function tFrontmatter(propertys: unknown) {
 	return "---\n" + stringifyYaml(propertys) + "\n---";
 }
 
-export async function request2(url: string, method: string, params?: object) {
+function parseReponse(reponse) {
+	try {
+		return JSON.parse(reponse);
+	} catch {
+		return reponse;
+	}
+}
+
+export async function request2(
+	url: string,
+	method: string,
+	headers?: Record<string, string>,
+	params?: object
+) {
 	if (method == "GET") {
 		if (params) {
 			const queryString = Object.keys(params)
@@ -12,16 +25,18 @@ export async function request2(url: string, method: string, params?: object) {
 				.join("&");
 			url = `${url}?${queryString}`;
 		}
-		return JSON.parse(
+		return parseReponse(
 			await request({
 				url: url,
+				headers: headers,
 				method: method,
 			})
 		);
-	} else if (method == "POST") {
-		return JSON.parse(
+	} else if (method == "POST" || method == "PATCH") {
+		return parseReponse(
 			await request({
 				url: url,
+				headers: headers,
 				method: method,
 				body: JSON.stringify(params),
 			})

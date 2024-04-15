@@ -41,5 +41,15 @@ export class AnimeParserSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				})
 			);
+
+		new Setting(containerEl)
+			.setName("accessToken")
+			.setDesc("accessToken")
+			.addText((text) =>
+				text.setValue(this.plugin.settings.accessToken).onChange(async (value) => {
+					this.plugin.settings.accessToken = value;
+					await this.plugin.saveSettings();
+				})
+			);
 	}
 }
