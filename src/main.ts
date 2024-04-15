@@ -1,5 +1,5 @@
 import jetpack from "fs-jetpack";
-import { Plugin, parseYaml } from "obsidian";
+import { Plugin, TFile, parseYaml } from "obsidian";
 import bangumiApi from "./lib/bangumiApi";
 import { parseEpisode } from "./lib/parser";
 import { AnimeParserSettings, DEFAULT_SETTINGS } from "./settings/settings";
@@ -17,6 +17,13 @@ export default class AnimeParserPlugin extends Plugin {
 			name: "Sync the animes library to obsidian",
 			callback: async () => {
 				await this.syncLibrary();
+			},
+		});
+		this.addCommand({
+			id: "play the anime",
+			name: "Play the anime from current episode",
+			callback: async () => {
+				await this.playAnime(this.app.workspace.getActiveFile());
 			},
 		});
 	}
@@ -89,5 +96,29 @@ export default class AnimeParserPlugin extends Plugin {
 					content
 			);
 		}
+	}
+
+	async playAnime(currentFile: TFile) {
+		const frontmatter = this.app.metadataCache.getFileCache(currentFile)?.frontmatter;
+		const current = frontmatter["progress"] + 1;
+		const episodeNum = frontmatter["episodeNum"];
+		const maxLength = episodeNum.toString().length;
+		const episodeIndex = (maxLength - current.toString().length) * 0 + current.toString();
+		let suffix = null;
+		const content = await this.app.vault.read(currentFile);
+		if (content.includes(".mp4")) {
+			suffix = ".mp4";
+		}
+		if (content.includes(".mkv")) {
+			suffix = ".mkv";
+		}
+		const videoUrl =
+			this.settings.libraryPath + "\\" + currentFile.basename + "\\" + episodeIndex + suffix;
+		await this.app.workspace.getLeaf().setViewState({
+			type: "mx-url-video",
+			state: {
+				source: `file:///${videoUrl}`,
+			},
+		});
 	}
 }
