@@ -70,7 +70,7 @@ export default class AnimeParserPlugin extends Plugin {
 		videos.forEach((video) => {
 			let newName = (videos2.indexOf(video) + 1).toString() + "." + new Path(video).suffix;
 			if (new Path(newName).stem.length < maxLength) {
-				newName = (maxLength - new Path(newName).stem.length) * 0 + newName;
+				newName =  "0".repeat((maxLength - new Path(newName).stem.length)) + newName;
 			}
 			if (new Path(video).name != newName) {
 				jetpack.rename(video, newName);
@@ -112,7 +112,7 @@ export default class AnimeParserPlugin extends Plugin {
 		const current = frontmatter["progress"] + 1;
 		const episodeNum = frontmatter["episodeNum"];
 		const maxLength = episodeNum.toString().length;
-		const episodeIndex = (maxLength - current.toString().length) * 0 + current.toString();
+		const episodeIndex =  "0".repeat((maxLength - current.toString().length)) + current.toString();
 		let suffix = null;
 		const content = await this.app.vault.read(currentFile);
 		if (content.includes(".mp4")) {
