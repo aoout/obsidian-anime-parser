@@ -90,6 +90,7 @@ export default class AnimeParserPlugin extends Plugin {
 			id: id,
 			summary: summary.replaceAll(/\n/g, ""),
 			tags: tags,
+			epNum: episodes.length
 		};
 		const notePath = this.settings.savePath
 			? this.settings.savePath + "/" + name + ".md"
