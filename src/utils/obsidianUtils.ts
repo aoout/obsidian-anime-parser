@@ -1,4 +1,4 @@
-import { stringifyYaml, request } from "obsidian";
+import { stringifyYaml, request, Pos, EditorRange } from "obsidian";
 
 export function tFrontmatter(propertys: unknown) {
 	return "---\n" + stringifyYaml(propertys) + "\n---";
@@ -49,4 +49,17 @@ export function templateWithVariables(template: string, variables: object) {
 		(template, key) => template.replaceAll(`{{${key}}}`, variables[key]),
 		template
 	);
+}
+
+export function pos2EditorRange(pos: Pos): EditorRange {
+	return {
+		from: {
+			ch: pos["start"].col,
+			line: pos["start"].line,
+		},
+		to: {
+			ch: pos["end"].col,
+			line: pos["end"].line,
+		}
+	};
 }

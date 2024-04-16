@@ -4,7 +4,7 @@ import bangumiApi from "./lib/bangumiApi";
 import { parseEpisode } from "./lib/parser";
 import { AnimeParserSettings, DEFAULT_SETTINGS } from "./settings/settings";
 import { AnimeParserSettingTab } from "./settings/settingsTab";
-import { tFrontmatter, templateWithVariables } from "./utils/obsidianUtils";
+import { pos2EditorRange, tFrontmatter, templateWithVariables } from "./utils/obsidianUtils";
 import { Path } from "./utils/path";
 
 export default class AnimeParserPlugin extends Plugin {
@@ -65,20 +65,9 @@ export default class AnimeParserPlugin extends Plugin {
 		const episodeNames = episodes.map((ep) => ep["name_cn"]);
 
 		const videos = jetpack.find(path, { matching: ["*.mp4", "*.mkv"], recursive: false });
-		const maxLength = videos.length.toString().length;
 		const videos2 = parseEpisode(videos);
-		videos.forEach((video) => {
-			let newName = (videos2.indexOf(video) + 1).toString() + "." + new Path(video).suffix;
-			if (new Path(newName).stem.length < maxLength) {
-				newName =  "0".repeat((maxLength - new Path(newName).stem.length)) + newName;
-			}
-			if (new Path(video).name != newName) {
-				jetpack.rename(video, newName);
-			}
-		});
-		const videos3 = jetpack.find(path, { matching: ["*.mp4", "*.mkv"], recursive: false });
 
-		const content = videos3
+		const content = videos2
 			.map(
 				(video, index) =>
 					`- [ep${index + 1}. ${episodeNames[index]}](${video.replaceAll(" ", "%20")})`
@@ -90,7 +79,7 @@ export default class AnimeParserPlugin extends Plugin {
 			id: id,
 			summary: summary.replaceAll(/\n/g, ""),
 			tags: tags,
-			epNum: episodes.length
+			epNum: episodes.length,
 		};
 		const notePath = this.settings.savePath
 			? this.settings.savePath + "/" + name + ".md"
@@ -109,20 +98,18 @@ export default class AnimeParserPlugin extends Plugin {
 
 	async playAnime(currentFile: TFile) {
 		const frontmatter = this.app.metadataCache.getFileCache(currentFile)?.frontmatter;
-		const current = frontmatter["progress"] + 1;
-		const episodeNum = frontmatter["episodeNum"];
-		const maxLength = episodeNum.toString().length;
-		const episodeIndex =  "0".repeat((maxLength - current.toString().length)) + current.toString();
-		let suffix = null;
-		const content = await this.app.vault.read(currentFile);
-		if (content.includes(".mp4")) {
-			suffix = ".mp4";
-		}
-		if (content.includes(".mkv")) {
-			suffix = ".mkv";
-		}
-		const videoUrl =
-			this.settings.libraryPath + "\\" + currentFile.basename + "\\" + episodeIndex + suffix;
+		const progress = frontmatter["progress"];
+
+		const items = this.app.metadataCache.getFileCache(currentFile).listItems;
+		const itemContexts = items.map((item) =>
+			this.app.workspace.activeEditor.editor.getRange(
+				pos2EditorRange(item.position).from,
+				pos2EditorRange(item.position).to
+			)
+		);
+		const paths = itemContexts.map((item) => item.match(new RegExp("\\((.*?)\\)"))[1]);
+
+		const videoUrl = paths[progress];
 		await this.app.workspace.getLeaf().setViewState({
 			type: "mx-url-video",
 			state: {
