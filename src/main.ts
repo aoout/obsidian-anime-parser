@@ -82,7 +82,7 @@ export default class AnimeParserPlugin extends Plugin {
 			epNum: episodes.length,
 		};
 		const notePath = this.settings.savePath
-			? this.settings.savePath + "/" + name + ".md"
+			? new Path("/",this.settings.savePath,name).withSuffix("md").string
 			: name + ".md";
 		if (!this.app.vault.getAbstractFileByPath(notePath)) {
 			await this.app.vault.create(
