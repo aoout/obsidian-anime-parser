@@ -65,8 +65,21 @@ export default class AnimeParserPlugin extends Plugin {
 		const episodeNames = episodes.map((ep) => ep["name_cn"]);
 
 		const videos = jetpack.find(path, { matching: ["*.mp4", "*.mkv"], recursive: false });
-		const videos2 = parseEpisode(videos);
+		let videos2 = parseEpisode(videos);
 
+		if(this.settings.regularizedTitle){
+			const maxLength = videos.length.toString().length;
+			videos.forEach((video) => {
+				let newName = (videos2.indexOf(video) + 1).toString() + "." + new Path(video).suffix;
+				if (new Path(newName).stem.length < maxLength) {
+					newName =  "0".repeat((maxLength - new Path(newName).stem.length)) + newName;
+				}
+				if (new Path(video).name != newName) {
+					jetpack.rename(video, newName);
+				}
+			});
+			videos2 = jetpack.find(path, { matching: ["*.mp4", "*.mkv"], recursive: false });
+		}
 		const content = videos2
 			.map(
 				(video, index) =>
