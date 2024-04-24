@@ -1,5 +1,5 @@
 import jetpack from "fs-jetpack";
-import { Plugin, TFile, parseYaml } from "obsidian";
+import { Menu, Plugin, TFile, parseYaml } from "obsidian";
 import bangumiApi from "./lib/bangumiApi";
 import { parseEpisode } from "./lib/parser";
 import { AnimeParserSettings, DEFAULT_SETTINGS } from "./settings/settings";
@@ -33,8 +33,137 @@ export default class AnimeParserPlugin extends Plugin {
 				await this.syncBangumi(this.app.workspace.getActiveFile());
 			},
 		});
-	}
+		this.registerMarkdownPostProcessor((element, context) => {
+			const noteFile = this.app.vault.getFileByPath(context.sourcePath);
+			const frontmatter = this.app.metadataCache.getFileCache(noteFile).frontmatter;
+			if (frontmatter?.bangumiID) {
+				const lists = element.findAll("ul, ol");
 
+				lists.forEach((list) => {
+					const listItems = list.findAll("li");
+					const numRows = Math.ceil(listItems.length / 3);
+
+					const wrapper = createWrapper();
+					for (let i = 0; i < numRows; i++) {
+						const row = createRow();
+						for (let j = 0; j < 3; j++) {
+							const index = i * 3 + j;
+							const listItem = listItems[index];
+							if (listItem) {
+								const progress = frontmatter.progress;
+								const listItemWrapper = createListItemWrapper(
+									progress,
+									listItem,
+									index
+								);
+								listItemWrapper.addEventListener("click", () => {
+									handleCardClick(this, listItem);
+								});
+								listItemWrapper.addEventListener("contextmenu", (event) => {
+									event.preventDefault();
+									handleCardRightClick(this, listItem, event, index);
+								});
+								row.appendChild(listItemWrapper);
+							}
+						}
+						wrapper.appendChild(row);
+					}
+					list.replaceWith(wrapper);
+				});
+			}
+
+			function createWrapper() {
+				const wrapper = document.createElement("div");
+				wrapper.style.display = "flex";
+				wrapper.style.flexWrap = "wrap";
+				return wrapper;
+			}
+
+			function createRow() {
+				const row = document.createElement("div");
+				row.style.display = "flex";
+				row.style.justifyContent = "space-between";
+				row.style.width = "100%";
+				row.style.marginBottom = "5px";
+				return row;
+			}
+
+			function createListItemWrapper(progress, listItem, index) {
+				const listItemWrapper = document.createElement("a");
+				listItemWrapper.style.flex = "0 0 calc(33.33% - 10px)";
+				listItemWrapper.style.padding = "5px";
+				listItemWrapper.style.border = "1px solid #ccc";
+				listItemWrapper.style.boxSizing = "border-box";
+				listItemWrapper.textContent = listItem.innerText;
+
+				if (index < progress) {
+					listItemWrapper.style.backgroundColor = "rgb(72, 151, 255)";
+					listItemWrapper.style.color = "white";
+				} else {
+					listItemWrapper.style.backgroundColor = "rgb(218, 234, 255)";
+					listItemWrapper.style.color = "rgb(0, 102, 204)";
+				}
+
+				return listItemWrapper;
+			}
+			async function handleCardClick(plugin, listItem) {
+				const url = listItem.querySelector("a").getAttribute("aria-label");
+				await plugin.app.workspace.getLeaf().setViewState({
+					type: "mx-url-video",
+					state: {
+						source: `file:///${url}`,
+					},
+				});
+			}
+			function handleCardRightClick(plugin: AnimeParserPlugin, listItem, event, index) {
+				const menu = new Menu();
+				menu.addItem((item) =>
+					item
+						.setTitle("打开笔记")
+						.setIcon("pen")
+						.onClick(async () => {
+							const commentFolder =
+								plugin.settings.savePath + "/" + noteFile.basename;
+							const commentPath =
+								commentFolder +
+								"/" +
+								"Media Note - " +
+								new Path(listItem.querySelector("a").getAttribute("aria-label"))
+									.stem +
+								".md";
+							if (!plugin.app.vault.getAbstractFileByPath(commentFolder)) {
+								await plugin.app.vault.createFolder(commentFolder);
+							}
+							if (!plugin.app.vault.getAbstractFileByPath(commentPath)) {
+								await plugin.app.vault.create(commentPath, "");
+							}
+							const activeLeaf = plugin.app.workspace.getLeaf();
+							activeLeaf.setViewState({
+								type: "markdown",
+								state: {
+									file: commentPath,
+									"mode": "source",
+									backlinks: false,
+									source: false,
+								},
+							});
+						})
+				);
+				menu.addItem((item) =>
+					item
+						.setTitle("看到这集")
+						.setIcon("eye")
+						.onClick(() => {
+							const progress = frontmatter.progress;
+							plugin.app.vault.process(noteFile, (data) =>
+								data.replace(`progress: ${progress}`, `progress: ${index + 1}`)
+							);
+						})
+				);
+				menu.showAtMouseEvent(event);
+			}
+		});
+	}
 	async loadSettings(): Promise<void> {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 	}
@@ -67,12 +196,13 @@ export default class AnimeParserPlugin extends Plugin {
 		const videos = jetpack.find(path, { matching: ["*.mp4", "*.mkv"], recursive: false });
 		let videos2 = parseEpisode(videos);
 
-		if(this.settings.regularizedTitle){
+		if (this.settings.regularizedTitle) {
 			const maxLength = videos.length.toString().length;
 			videos.forEach((video) => {
-				let newName = (videos2.indexOf(video) + 1).toString() + "." + new Path(video).suffix;
+				let newName =
+					(videos2.indexOf(video) + 1).toString() + "." + new Path(video).suffix;
 				if (new Path(newName).stem.length < maxLength) {
-					newName =  "0".repeat((maxLength - new Path(newName).stem.length)) + newName;
+					newName = "0".repeat(maxLength - new Path(newName).stem.length) + newName;
 				}
 				if (new Path(video).name != newName) {
 					jetpack.rename(video, newName);
@@ -95,7 +225,7 @@ export default class AnimeParserPlugin extends Plugin {
 			epNum: episodes.length,
 		};
 		const notePath = this.settings.savePath
-			? new Path("/",this.settings.savePath,name).withSuffix("md").string
+			? new Path("/", this.settings.savePath, name).withSuffix("md").string
 			: name + ".md";
 		if (!this.app.vault.getAbstractFileByPath(notePath)) {
 			await this.app.vault.create(
