@@ -10,6 +10,6 @@ export const DEFAULT_SETTINGS: AnimeParserSettings = {
 	libraryPath: "",
 	savePath: "",
 	regularizedTitle: false,
-	propertysTemplate: "cover: {{cover}}\nbangumiApi: {{id}}",
+	propertysTemplate: "playlist: true\ncover: {{cover}}\nbangumiApi: {{id}}\nepisodeNum: {{epNum}}\nprogress: 0",
 	accessToken: ""
 };
