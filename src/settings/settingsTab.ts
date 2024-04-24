@@ -31,7 +31,15 @@ export class AnimeParserSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				})
 			);
-
+		new Setting(containerEl)
+			.setName("regularizedTitle")
+			.setDesc("regularizedTitle")
+			.addToggle((toggle) => {
+				toggle.setValue(this.plugin.settings.regularizedTitle).onChange(async (value) => {
+					this.plugin.settings.regularizedTitle = value;
+					await this.plugin.saveSettings();
+				});
+			});
 		new Setting(containerEl)
 			.setName("propertysTemplate")
 			.setDesc("propertysTemplate")
