@@ -41,6 +41,7 @@ export default class AnimeParserPlugin extends Plugin {
 
 				lists.forEach((list) => {
 					const listItems = list.findAll("li");
+					console.log(listItems);
 					const numRows = Math.ceil(listItems.length / 3);
 
 					const wrapper = createWrapper();
@@ -124,13 +125,7 @@ export default class AnimeParserPlugin extends Plugin {
 						.onClick(async () => {
 							const commentFolder =
 								plugin.settings.savePath + "/" + noteFile.basename;
-							const commentPath =
-								commentFolder +
-								"/" +
-								"Media Note - " +
-								new Path(listItem.querySelector("a").getAttribute("aria-label"))
-									.stem +
-								".md";
+							const commentPath = commentFolder + "/" + listItem.innerText + ".md";
 							if (!plugin.app.vault.getAbstractFileByPath(commentFolder)) {
 								await plugin.app.vault.createFolder(commentFolder);
 							}
@@ -142,7 +137,7 @@ export default class AnimeParserPlugin extends Plugin {
 								type: "markdown",
 								state: {
 									file: commentPath,
-									"mode": "source",
+									mode: "source",
 									backlinks: false,
 									source: false,
 								},
