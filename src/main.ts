@@ -108,11 +108,26 @@ export default class AnimeParserPlugin extends Plugin {
 				return listItemWrapper;
 			}
 			async function handleCardClick(plugin, listItem) {
-				const url = listItem.querySelector("a").getAttribute("aria-label");
+				let url = listItem.childNodes[1].ariaLabel;
+
+
+				function addBackslashAfterName(path: string, name: string): string {
+					const nameIndex = path.indexOf(name);
+
+					if (nameIndex + name.length + 2 <= path.length && path.charAt(nameIndex + name.length) !== "\\" && path.charAt(nameIndex + name.length + 1) !== "\\") {
+						path = path.slice(0, nameIndex + name.length) + "\\" + path.slice(nameIndex + name.length);
+					}
+				
+					return path;
+				}
+				
+				url = addBackslashAfterName(url,noteFile.basename);
+
+
 				await plugin.app.workspace.getLeaf().setViewState({
 					type: "mx-url-video",
 					state: {
-						source: `file:///${url}`,
+						source: url,
 					},
 				});
 			}
@@ -126,7 +141,7 @@ export default class AnimeParserPlugin extends Plugin {
 							const commentFolder =
 								plugin.settings.savePath + "/" + noteFile.basename;
 							const commentPath = commentFolder + "/" + listItem.innerText + ".md";
-							const url = listItem.querySelector("a").getAttribute("aria-label");
+							const url = listItem.querySelector("a").getAttribute("href");
 							if (!plugin.app.vault.getAbstractFileByPath(commentFolder)) {
 								await plugin.app.vault.createFolder(commentFolder);
 							}
