@@ -126,11 +126,14 @@ export default class AnimeParserPlugin extends Plugin {
 							const commentFolder =
 								plugin.settings.savePath + "/" + noteFile.basename;
 							const commentPath = commentFolder + "/" + listItem.innerText + ".md";
+							const url = listItem.querySelector("a").getAttribute("aria-label");
 							if (!plugin.app.vault.getAbstractFileByPath(commentFolder)) {
 								await plugin.app.vault.createFolder(commentFolder);
 							}
 							if (!plugin.app.vault.getAbstractFileByPath(commentPath)) {
-								await plugin.app.vault.create(commentPath, "");
+								await plugin.app.vault.create(commentPath, tFrontmatter({
+									video: url
+								}));
 							}
 							const activeLeaf = plugin.app.workspace.getLeaf();
 							activeLeaf.setViewState({
