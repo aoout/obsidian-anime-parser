@@ -110,19 +110,24 @@ export default class AnimeParserPlugin extends Plugin {
 			async function handleCardClick(plugin, listItem) {
 				let url = listItem.childNodes[1].ariaLabel;
 
-
 				function addBackslashAfterName(path: string, name: string): string {
 					const nameIndex = path.indexOf(name);
 
-					if (nameIndex + name.length + 2 <= path.length && path.charAt(nameIndex + name.length) !== "\\" && path.charAt(nameIndex + name.length + 1) !== "\\") {
-						path = path.slice(0, nameIndex + name.length) + "\\" + path.slice(nameIndex + name.length);
+					if (
+						nameIndex + name.length + 2 <= path.length &&
+						path.charAt(nameIndex + name.length) !== "\\" &&
+						path.charAt(nameIndex + name.length + 1) !== "\\"
+					) {
+						path =
+							path.slice(0, nameIndex + name.length) +
+							"\\" +
+							path.slice(nameIndex + name.length);
 					}
-				
+
 					return path;
 				}
-				
-				url = addBackslashAfterName(url,noteFile.basename);
 
+				url = addBackslashAfterName(url, noteFile.basename);
 
 				await plugin.app.workspace.getLeaf().setViewState({
 					type: "mx-url-video",
@@ -141,14 +146,36 @@ export default class AnimeParserPlugin extends Plugin {
 							const commentFolder =
 								plugin.settings.savePath + "/" + noteFile.basename;
 							const commentPath = commentFolder + "/" + listItem.innerText + ".md";
-							const url = listItem.querySelector("a").getAttribute("href");
+							let url = listItem.childNodes[1].ariaLabel;
+
+							function addBackslashAfterName(path: string, name: string): string {
+								const nameIndex = path.indexOf(name);
+
+								if (
+									nameIndex + name.length + 2 <= path.length &&
+									path.charAt(nameIndex + name.length) !== "\\" &&
+									path.charAt(nameIndex + name.length + 1) !== "\\"
+								) {
+									path =
+										path.slice(0, nameIndex + name.length) +
+										"\\" +
+										path.slice(nameIndex + name.length);
+								}
+
+								return path;
+							}
+
+							url = addBackslashAfterName(url, noteFile.basename);
 							if (!plugin.app.vault.getAbstractFileByPath(commentFolder)) {
 								await plugin.app.vault.createFolder(commentFolder);
 							}
 							if (!plugin.app.vault.getAbstractFileByPath(commentPath)) {
-								await plugin.app.vault.create(commentPath, tFrontmatter({
-									video: url
-								}));
+								await plugin.app.vault.create(
+									commentPath,
+									tFrontmatter({
+										video: url,
+									})
+								);
 							}
 							const activeLeaf = plugin.app.workspace.getLeaf();
 							activeLeaf.setViewState({
