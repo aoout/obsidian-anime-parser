@@ -8,20 +8,18 @@ function caseInsensitiveEqual(str1, str2) {
 
 export default class bangumiApi {
 	static async search(name: string) {
-		// BUG: 不知道为什么，《梦想成为魔法少女》这部就是搜索不到。我听说过nsfw内容需要更多验证，不知道是不是因为这个。
 		const animes = await request2(
-			`${BASEURL}v0/search/subjects`,
-			"POST",
-			{},
+			`${BASEURL}/search/subject/${encodeURI(name)}`,
+			"GET",
 			{
-				keyword: name,
-				filter: {
-					type: [2],
-				},
+				"Content-Type": "application/json",
+			},
+			{
+				type: 2
 			}
 		);
-		let result = animes["data"].find((anime) => caseInsensitiveEqual(anime["name_cn"], name));
-		if (!result) result = animes["data"][0];
+		let result = animes["list"].find((anime) => caseInsensitiveEqual(anime["name_cn"], name));
+		if (!result) result = animes["list"][0];
 		return result;
 	}
 
