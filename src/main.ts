@@ -256,7 +256,7 @@ export default class AnimeParserPlugin extends Plugin {
 			.map(
 				(video, index) =>
 					`- [ep${index + 1}. ${episodeNames[index]}](${
-						"mx://animes/" + name + "/" + new Path(video).name.replaceAll(" ", "%20")
+						"mx://animes/" + name.replaceAll(" ", "%20") + "/" + new Path(video).name.replaceAll(" ", "%20")
 					})`
 			)
 			.join("\n");
