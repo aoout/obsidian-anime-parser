@@ -135,9 +135,14 @@ export default class AnimeParserPlugin extends Plugin {
 							if (!plugin.app.vault.getAbstractFileByPath(commentPath)) {
 								await plugin.app.vault.create(
 									commentPath,
-									tFrontmatter({
-										video: url,
-									})
+									tFrontmatter(
+										parseYaml(
+											templateWithVariables(plugin.settings.notePropertysTemplate,{
+												url: url,
+												title: noteFile.basename
+											})
+										)
+									)
 								);
 							}
 							const activeLeaf = plugin.app.workspace.getLeaf();

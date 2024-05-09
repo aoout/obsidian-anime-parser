@@ -32,20 +32,20 @@ export class AnimeParserSettingTab extends PluginSettingTab {
 				})
 			);
 		new Setting(containerEl)
-			.setName("regularizedTitle")
-			.setDesc("regularizedTitle")
-			.addToggle((toggle) => {
-				toggle.setValue(this.plugin.settings.regularizedTitle).onChange(async (value) => {
-					this.plugin.settings.regularizedTitle = value;
-					await this.plugin.saveSettings();
-				});
-			});
-		new Setting(containerEl)
 			.setName("propertysTemplate")
 			.setDesc("propertysTemplate")
 			.addTextArea((text) =>
 				text.setValue(this.plugin.settings.propertysTemplate).onChange(async (value) => {
 					this.plugin.settings.propertysTemplate = value;
+					await this.plugin.saveSettings();
+				})
+			);
+		new Setting(containerEl)
+			.setName("notePropertysTemplate")
+			.setDesc("notePropertysTemplate")
+			.addTextArea((text) =>
+				text.setValue(this.plugin.settings.notePropertysTemplate).onChange(async (value) => {
+					this.plugin.settings.notePropertysTemplate = value;
 					await this.plugin.saveSettings();
 				})
 			);
