@@ -127,7 +127,7 @@ export default class AnimeParserPlugin extends Plugin {
 							const commentFolder =
 								plugin.settings.savePath + "/" + noteFile.basename;
 							const commentPath = commentFolder + "/" + listItem.innerText + ".md";
-							const url = listItem.childNodes[1].ariaLabel;
+							const url = listItem.childNodes[1].ariaLabel.replaceAll(" ","%20");
 
 							if (!plugin.app.vault.getAbstractFileByPath(commentFolder)) {
 								await plugin.app.vault.createFolder(commentFolder);
