@@ -1,5 +1,5 @@
 import jetpack from "fs-jetpack";
-import { Menu, Plugin, TFile, parseYaml } from "obsidian";
+import { Menu, Notice, Plugin, TFile, parseYaml } from "obsidian";
 import bangumiApi from "./lib/bangumiApi";
 import { parseEpisode } from "./lib/parser";
 import { AnimeParserSettings, DEFAULT_SETTINGS } from "./settings/settings";
@@ -308,6 +308,10 @@ export default class AnimeParserPlugin extends Plugin {
 	async syncBangumi(currentFile: TFile) {
 		const frontmatter = this.app.metadataCache.getFileCache(currentFile)?.frontmatter;
 		const progress = frontmatter["progress"];
+		if(progress <= 0){
+			new Notice("Your watching data is abnormal, please fix it manually");
+			return;
+		}
 		const id = frontmatter["bangumiID"];
 		await bangumiApi.updateProgress(this.settings.accessToken, id, progress);
 	}
