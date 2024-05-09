@@ -108,7 +108,7 @@ export default class AnimeParserPlugin extends Plugin {
 				return listItemWrapper;
 			}
 			async function handleCardClick(plugin, listItem) {
-				let url = listItem.childNodes[1].ariaLabel;
+				let url = decodeURI(listItem.childNodes[1].ariaLabel);
 
 				function addBackslashAfterName(path: string, name: string): string {
 					const nameIndex = path.indexOf(name);
