@@ -108,26 +108,7 @@ export default class AnimeParserPlugin extends Plugin {
 				return listItemWrapper;
 			}
 			async function handleCardClick(plugin, listItem) {
-				let url = decodeURI(listItem.childNodes[1].ariaLabel);
-
-				function addBackslashAfterName(path: string, name: string): string {
-					const nameIndex = path.indexOf(name);
-
-					if (
-						nameIndex + name.length + 2 <= path.length &&
-						path.charAt(nameIndex + name.length) !== "\\" &&
-						path.charAt(nameIndex + name.length + 1) !== "\\"
-					) {
-						path =
-							path.slice(0, nameIndex + name.length) +
-							"\\" +
-							path.slice(nameIndex + name.length);
-					}
-
-					return path;
-				}
-
-				url = addBackslashAfterName(url, noteFile.basename);
+				const url = listItem.childNodes[1].ariaLabel;
 
 				await plugin.app.workspace.getLeaf().setViewState({
 					type: "mx-url-video",
@@ -146,26 +127,8 @@ export default class AnimeParserPlugin extends Plugin {
 							const commentFolder =
 								plugin.settings.savePath + "/" + noteFile.basename;
 							const commentPath = commentFolder + "/" + listItem.innerText + ".md";
-							let url = listItem.childNodes[1].ariaLabel;
+							const url = listItem.childNodes[1].ariaLabel;
 
-							function addBackslashAfterName(path: string, name: string): string {
-								const nameIndex = path.indexOf(name);
-
-								if (
-									nameIndex + name.length + 2 <= path.length &&
-									path.charAt(nameIndex + name.length) !== "\\" &&
-									path.charAt(nameIndex + name.length + 1) !== "\\"
-								) {
-									path =
-										path.slice(0, nameIndex + name.length) +
-										"\\" +
-										path.slice(nameIndex + name.length);
-								}
-
-								return path;
-							}
-
-							url = addBackslashAfterName(url, noteFile.basename);
 							if (!plugin.app.vault.getAbstractFileByPath(commentFolder)) {
 								await plugin.app.vault.createFolder(commentFolder);
 							}
@@ -215,12 +178,12 @@ export default class AnimeParserPlugin extends Plugin {
 	async syncLibrary() {
 		const animes = jetpack.list(this.settings.libraryPath);
 		for (const anime of animes) {
-			await this.parseAnime(this.settings.libraryPath + "/" + anime);
+			await this.parseAnime(anime);
 			await new Promise((resolve) => setTimeout(resolve, 500));
 		}
 	}
-	async parseAnime(path: string) {
-		const name = new Path(path).name;
+	async parseAnime(name: string) {
+		const path = this.settings.libraryPath + "/" + name;
 		const data = await bangumiApi.search(name);
 		const id = data["id"];
 
@@ -233,27 +196,63 @@ export default class AnimeParserPlugin extends Plugin {
 		const episodes = await bangumiApi.getEpisodes(id);
 		const episodeNames = episodes.map((ep) => ep["name_cn"]);
 
-		const videos = jetpack.find(path, { matching: ["*.mp4", "*.mkv"], recursive: false });
-		let videos2 = parseEpisode(videos);
+		const totalEps = anime["total_episodes"];
 
-		if (this.settings.regularizedTitle) {
-			const maxLength = videos.length.toString().length;
-			videos.forEach((video) => {
-				let newName =
-					(videos2.indexOf(video) + 1).toString() + "." + new Path(video).suffix;
-				if (new Path(newName).stem.length < maxLength) {
-					newName = "0".repeat(maxLength - new Path(newName).stem.length) + newName;
-				}
-				if (new Path(video).name != newName) {
-					jetpack.rename(video, newName);
-				}
-			});
-			videos2 = jetpack.find(path, { matching: ["*.mp4", "*.mkv"], recursive: false });
+		const videos = jetpack.find(this.settings.libraryPath + "/" + name, {
+			matching: ["*.mp4", "*.mkv"],
+			recursive: false,
+		});
+
+		function generatePaddedSequence(maxValue: number): string[] {
+			const maxLength = maxValue.toString().length;
+
+			return Array.from({ length: maxValue }, (_, i) =>
+				(i + 1).toString().padStart(maxLength, "0")
+			);
 		}
-		const content = videos2
+
+		const theList = generatePaddedSequence(totalEps);
+
+		const oVideos = videos.filter((video) => !theList.includes(new Path(video).stem));
+
+		let videos3 = null;
+		let videos4 = null;
+		let yes = false;
+		if (oVideos.length == videos.length) {
+			yes = true;
+			videos3 = parseEpisode(videos, 1);
+			for (let i = 0; i < videos3.length; i++) {
+				jetpack.rename(videos3[i], theList[i] + "." + new Path(videos3[i]).suffix);
+			}
+			videos4 = jetpack.find(path, { matching: ["*.mp4", "*.mkv"], recursive: false });
+		} else if (oVideos.length != 0) {
+			yes = true;
+			const of = jetpack.find(path, { matching: ["*.of"], recursive: false });
+			const pvideos = videos.filter((video) => theList.includes(new Path(video).stem));
+			const maxP = pvideos
+				.map((video) => parseInt(new Path(video).stem))
+				.reduce((a, b) => (a > b ? a : b));
+			const videos2 = parseEpisode(oVideos.concat(of), maxP);
+			videos3 = [...videos2.slice(1)];
+			for (let i = 0; i < oVideos.length; i++) {
+				jetpack.rename(videos3[i], theList[maxP + i] + "." + new Path(videos3[i]).suffix);
+			}
+			videos4 = jetpack.find(path, { matching: ["*.mp4", "*.mkv"], recursive: false });
+		} else {
+			videos4 = jetpack.find(path, { matching: ["*.mp4", "*.mkv"], recursive: false });
+		}
+
+		if (videos.length < totalEps && yes) {
+			jetpack.find(path, { matching: ["*.of"], recursive: false }).forEach(jetpack.remove);
+			new Path(videos3.slice(-1)[0]).withSuffix(".of").write("");
+		}
+
+		const content = videos4
 			.map(
 				(video, index) =>
-					`- [ep${index + 1}. ${episodeNames[index]}](${video.replaceAll(" ", "%20")})`
+					`- [ep${index + 1}. ${episodeNames[index]}](${
+						"mx://animes/" + name + "/" + new Path(video).name.replaceAll(" ", "%20")
+					})`
 			)
 			.join("\n");
 
@@ -296,7 +295,7 @@ export default class AnimeParserPlugin extends Plugin {
 		await this.app.workspace.getLeaf().setViewState({
 			type: "mx-url-video",
 			state: {
-				source: `file:///${videoUrl}`,
+				source: videoUrl,
 			},
 		});
 	}

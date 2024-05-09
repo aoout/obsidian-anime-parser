@@ -1,3 +1,5 @@
+import jetpack from "fs-jetpack";
+
 export function tFile(string) {
 	// convert string to a vaild filename on windows.
 	return string.replace(/[/|\\:*?"<>]/g, "");
@@ -97,5 +99,9 @@ export class Path {
 			result[0] = result[0] + ":";
 		}
 		return result.join(this.sep);
+	}
+
+	write(content: string) {
+		jetpack.write(this.string, content);
 	}
 }
