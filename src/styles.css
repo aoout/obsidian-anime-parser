@@ -1,0 +1,31 @@
+/* BangumiMatrix styles */
+
+.bangumi-matrix-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.bangumi-matrix-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+.bangumi-list-item-wrapper {
+    flex: 0 0 calc(33.33% - 10px);
+    padding: 5px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    text-align: center; /* 添加居中文本，根据需要可调整 */
+}
+
+.bangumi-list-item-wrapper.completed {
+    background-color: rgb(72, 151, 255);
+    color: white;
+}
+
+.bangumi-list-item-wrapper.pending {
+    background-color: rgb(218, 234, 255);
+    color: rgb(0, 102, 204);
+}

@@ -1,11 +1,13 @@
 import jetpack from "fs-jetpack";
-import { Menu, Notice, Plugin, TFile, parseYaml } from "obsidian";
+import { Notice, Plugin, TFile, parseYaml } from "obsidian";
 import bangumiApi from "./lib/bangumiApi";
+import { BangumiMatrix } from "./lib/bangumiMatrix";
 import { parseEpisode } from "./lib/parser";
 import { AnimeParserSettings, DEFAULT_SETTINGS } from "./settings/settings";
 import { AnimeParserSettingTab } from "./settings/settingsTab";
 import { pos2EditorRange, tFrontmatter, templateWithVariables } from "./utils/obsidianUtils";
-import { Path } from "./utils/path";
+import { P, Path } from "./utils/path";
+import { generatePaddedSequence } from "./utils/utils";
 
 export default class AnimeParserPlugin extends Plugin {
 	settings: AnimeParserSettings;
@@ -34,142 +36,8 @@ export default class AnimeParserPlugin extends Plugin {
 			},
 		});
 		this.registerMarkdownPostProcessor((element, context) => {
-			const noteFile = this.app.vault.getFileByPath(context.sourcePath);
-			const frontmatter = this.app.metadataCache.getFileCache(noteFile).frontmatter;
-			if (frontmatter?.bangumiID) {
-				const lists = element.findAll("ul, ol");
-
-				lists.forEach((list) => {
-					const listItems = list.findAll("li");
-					console.log(listItems);
-					const numRows = Math.ceil(listItems.length / 3);
-
-					const wrapper = createWrapper();
-					for (let i = 0; i < numRows; i++) {
-						const row = createRow();
-						for (let j = 0; j < 3; j++) {
-							const index = i * 3 + j;
-							const listItem = listItems[index];
-							if (listItem) {
-								const progress = frontmatter.progress;
-								const listItemWrapper = createListItemWrapper(
-									progress,
-									listItem,
-									index
-								);
-								listItemWrapper.addEventListener("click", () => {
-									handleCardClick(this, listItem);
-								});
-								listItemWrapper.addEventListener("contextmenu", (event) => {
-									event.preventDefault();
-									handleCardRightClick(this, listItem, event, index);
-								});
-								row.appendChild(listItemWrapper);
-							}
-						}
-						wrapper.appendChild(row);
-					}
-					list.replaceWith(wrapper);
-				});
-			}
-
-			function createWrapper() {
-				const wrapper = document.createElement("div");
-				wrapper.style.display = "flex";
-				wrapper.style.flexWrap = "wrap";
-				return wrapper;
-			}
-
-			function createRow() {
-				const row = document.createElement("div");
-				row.style.display = "flex";
-				row.style.justifyContent = "space-between";
-				row.style.width = "100%";
-				row.style.marginBottom = "5px";
-				return row;
-			}
-
-			function createListItemWrapper(progress, listItem, index) {
-				const listItemWrapper = document.createElement("a");
-				listItemWrapper.style.flex = "0 0 calc(33.33% - 10px)";
-				listItemWrapper.style.padding = "5px";
-				listItemWrapper.style.border = "1px solid #ccc";
-				listItemWrapper.style.boxSizing = "border-box";
-				listItemWrapper.textContent = listItem.innerText;
-
-				if (index < progress) {
-					listItemWrapper.style.backgroundColor = "rgb(72, 151, 255)";
-					listItemWrapper.style.color = "white";
-				} else {
-					listItemWrapper.style.backgroundColor = "rgb(218, 234, 255)";
-					listItemWrapper.style.color = "rgb(0, 102, 204)";
-				}
-
-				return listItemWrapper;
-			}
-			async function handleCardClick(plugin, listItem) {
-				const url = listItem.childNodes[1].ariaLabel;
-
-				await plugin.app.workspace.getLeaf().setViewState({
-					type: "mx-url-video",
-					state: {
-						source: url,
-					},
-				});
-			}
-			function handleCardRightClick(plugin: AnimeParserPlugin, listItem, event, index) {
-				const menu = new Menu();
-				menu.addItem((item) =>
-					item
-						.setTitle("打开笔记")
-						.setIcon("pen")
-						.onClick(async () => {
-							const commentFolder =
-								plugin.settings.savePath + "/" + noteFile.basename;
-							const commentPath = commentFolder + "/" + listItem.innerText + ".md";
-							const url = listItem.childNodes[1].ariaLabel.replaceAll(" ","%20");
-
-							if (!plugin.app.vault.getAbstractFileByPath(commentFolder)) {
-								await plugin.app.vault.createFolder(commentFolder);
-							}
-							if (!plugin.app.vault.getAbstractFileByPath(commentPath)) {
-								await plugin.app.vault.create(
-									commentPath,
-									tFrontmatter(
-										parseYaml(
-											templateWithVariables(plugin.settings.notePropertysTemplate,{
-												url: url,
-												title: noteFile.basename
-											})
-										)
-									)
-								);
-							}
-							const activeLeaf = plugin.app.workspace.getLeaf();
-							activeLeaf.setViewState({
-								type: "markdown",
-								state: {
-									file: commentPath,
-									mode: "source",
-									backlinks: false,
-									source: false,
-								},
-							});
-						})
-				);
-				menu.addItem((item) =>
-					item
-						.setTitle("看到这集")
-						.setIcon("eye")
-						.onClick(() => {
-							const progress = frontmatter.progress;
-							plugin.app.vault.process(noteFile, (data) =>
-								data.replace(`progress: ${progress}`, `progress: ${index + 1}`)
-							);
-						})
-				);
-				menu.showAtMouseEvent(event);
-			}
+			const bangumiMatrix = new BangumiMatrix(this.app, this.settings);
+			return bangumiMatrix.process(element, context);
 		});
 	}
 	async loadSettings(): Promise<void> {
@@ -188,75 +56,76 @@ export default class AnimeParserPlugin extends Plugin {
 		}
 	}
 	async parseAnime(name: string) {
-		const path = this.settings.libraryPath + "/" + name;
-		const data = await bangumiApi.search(name);
-		const id = data["id"];
+		const path = new Path(this.settings.libraryPath, name).string;
 
-		const anime = await bangumiApi.getMetadata(id);
+		const { id } = await bangumiApi.search(name);
 
-		const cover = anime["images"]["common"];
-		const summary = anime["summary"];
-		const tags = anime["tags"].map((tag) => tag["name"]);
+		const {
+			images: { common: cover },
+			summary,
+			tags: tagNames,
+			total_episodes: totalEps,
+		} = await bangumiApi.getMetadata(id);
+
+		const tags = tagNames.map((tag) => tag.name);
 
 		const episodes = await bangumiApi.getEpisodes(id);
-		const episodeNames = episodes.map((ep) => ep["name_cn"]);
+		const episodeNames = episodes.map((ep) => ep.name_cn);
 
-		const totalEps = anime["total_episodes"];
+		const videoExtensions = ["*.mp4", "*.mkv"];
 
-		const videos = jetpack.find(this.settings.libraryPath + "/" + name, {
-			matching: ["*.mp4", "*.mkv"],
-			recursive: false,
-		});
+		const videos = jetpack.find(path, { matching: videoExtensions });
+		const suffix = P(videos[0]).suffix;
 
-		function generatePaddedSequence(maxValue: number): string[] {
-			const maxLength = maxValue.toString().length;
+		const epIndexs = generatePaddedSequence(totalEps);
+		console.log(epIndexs);
 
-			return Array.from({ length: maxValue }, (_, i) =>
-				(i + 1).toString().padStart(maxLength, "0")
-			);
-		}
+		const unprocessedVideos = videos.filter((video) => !epIndexs.includes(P(video).stem));
 
-		const theList = generatePaddedSequence(totalEps);
+		if (unprocessedVideos.length) {
+			let parsedVideos;
+			const allUnprocessed = unprocessedVideos.length === videos.length;
 
-		const oVideos = videos.filter((video) => !theList.includes(new Path(video).stem));
+			if (allUnprocessed) {
+				parsedVideos = parseEpisode(videos, 1);
+				parsedVideos.forEach((video, i) =>
+					jetpack.rename(video, P(epIndexs[i]).withSuffix(suffix).string)
+				);
+			} else {
+				const of = jetpack.find(path, { matching: ["*.of"] });
+				const processedVideos = videos.filter((video) => epIndexs.includes(P(video).stem));
+				const maxProcessedEpisode = Math.max(
+					...processedVideos.map((video) => parseInt(P(video).stem))
+				);
 
-		let videos3 = null;
-		let videos4 = null;
-		let yes = false;
-		if (oVideos.length == videos.length) {
-			yes = true;
-			videos3 = parseEpisode(videos, 1);
-			for (let i = 0; i < videos3.length; i++) {
-				jetpack.rename(videos3[i], theList[i] + "." + new Path(videos3[i]).suffix);
+				const parsedEpisodes = parseEpisode(
+					unprocessedVideos.concat(of),
+					maxProcessedEpisode
+				);
+				parsedVideos = [...parsedEpisodes.slice(1)];
+
+				unprocessedVideos.forEach((_, i) =>
+					jetpack.rename(
+						parsedVideos[i],
+						P(epIndexs[maxProcessedEpisode + i]).withSuffix(suffix).string
+					)
+				);
 			}
-			videos4 = jetpack.find(path, { matching: ["*.mp4", "*.mkv"], recursive: false });
-		} else if (oVideos.length != 0) {
-			yes = true;
-			const of = jetpack.find(path, { matching: ["*.of"], recursive: false });
-			const pvideos = videos.filter((video) => theList.includes(new Path(video).stem));
-			const maxP = pvideos
-				.map((video) => parseInt(new Path(video).stem))
-				.reduce((a, b) => (a > b ? a : b));
-			const videos2 = parseEpisode(oVideos.concat(of), maxP);
-			videos3 = [...videos2.slice(1)];
-			for (let i = 0; i < oVideos.length; i++) {
-				jetpack.rename(videos3[i], theList[maxP + i] + "." + new Path(videos3[i]).suffix);
+
+			if (videos.length < totalEps) {
+				jetpack
+					.find(path, { matching: ["*.of"], recursive: false })
+					.forEach(jetpack.remove);
+				new Path(parsedVideos.slice(-1)[0]).withSuffix(".of").write("");
 			}
-			videos4 = jetpack.find(path, { matching: ["*.mp4", "*.mkv"], recursive: false });
-		} else {
-			videos4 = jetpack.find(path, { matching: ["*.mp4", "*.mkv"], recursive: false });
 		}
 
-		if (videos.length < totalEps && yes) {
-			jetpack.find(path, { matching: ["*.of"], recursive: false }).forEach(jetpack.remove);
-			new Path(videos3.slice(-1)[0]).withSuffix(".of").write("");
-		}
-
-		const content = videos4
+		const content = generatePaddedSequence(totalEps)
+			.slice(0, videos.length)
 			.map(
 				(video, index) =>
 					`- [ep${index + 1}. ${episodeNames[index]}](${
-						"mx://animes/" + name.replaceAll(" ", "%20") + "/" + new Path(video).name.replaceAll(" ", "%20")
+						"mx://animes/" + name.replaceAll(" ", "%20") + "/" + video + "." + suffix
 					})`
 			)
 			.join("\n");
@@ -268,6 +137,7 @@ export default class AnimeParserPlugin extends Plugin {
 			tags: tags,
 			epNum: episodes.length,
 		};
+
 		const notePath = this.settings.savePath
 			? new Path("/", this.settings.savePath, name).withSuffix("md").string
 			: name + ".md";
@@ -308,7 +178,7 @@ export default class AnimeParserPlugin extends Plugin {
 	async syncBangumi(currentFile: TFile) {
 		const frontmatter = this.app.metadataCache.getFileCache(currentFile)?.frontmatter;
 		const progress = frontmatter["progress"];
-		if(progress <= 0){
+		if (progress <= 0) {
 			new Notice("Your watching data is abnormal, please fix it manually");
 			return;
 		}

@@ -105,3 +105,7 @@ export class Path {
 		jetpack.write(this.string, content);
 	}
 }
+
+export function P(...paths: string[]):Path{
+	return new Path(...paths);
+}

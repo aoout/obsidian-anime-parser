@@ -52,7 +52,7 @@ if (vaultDev.trim().length > 0) {
 		console.log();
 	}
 }
-const styleSheet = "";
+const styleSheet = "--with-stylesheet src/styles.css";
 const command = `obsidian-plugin dev ${styleSheet} src/main.ts ${cmd}`;
 console.log(
 	c.info.italic(
