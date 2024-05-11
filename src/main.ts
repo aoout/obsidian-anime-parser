@@ -150,6 +150,7 @@ export default class AnimeParserPlugin extends Plugin {
 				"\n" +
 				content
 		);
+		new Notice(`${name}has been imported`);
 	}
 
 	async playAnime(currentFile: TFile) {
@@ -179,5 +180,6 @@ export default class AnimeParserPlugin extends Plugin {
 		}
 		const id = frontmatter["bangumiID"];
 		await bangumiApi.updateProgress(this.settings.accessToken, id, progress);
+		new Notice("The progress has been uploaded to bangumi");
 	}
 }
