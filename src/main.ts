@@ -5,9 +5,10 @@ import { BangumiMatrix } from "./lib/bangumiMatrix";
 import { parseEpisode } from "./lib/parser";
 import { AnimeParserSettings, DEFAULT_SETTINGS } from "./settings/settings";
 import { AnimeParserSettingTab } from "./settings/settingsTab";
-import { pos2EditorRange, tFrontmatter, templateWithVariables } from "./utils/obsidianUtils";
+import { createNote, pos2EditorRange, tFrontmatter, templateBuild } from "./utils/obsidianUtils";
 import { P, Path } from "./utils/path";
 import { generatePaddedSequence } from "./utils/utils";
+import { open } from "./utils/mediaExtendedUtils";
 
 export default class AnimeParserPlugin extends Plugin {
 	settings: AnimeParserSettings;
@@ -141,16 +142,14 @@ export default class AnimeParserPlugin extends Plugin {
 		const notePath = this.settings.savePath
 			? new Path("/", this.settings.savePath, name).withSuffix("md").string
 			: name + ".md";
-		if (!this.app.vault.getAbstractFileByPath(notePath)) {
-			await this.app.vault.create(
-				notePath,
-				tFrontmatter(
-					parseYaml(templateWithVariables(this.settings.propertysTemplate, variables))
-				) +
-					"\n" +
-					content
-			);
-		}
+
+		await createNote(
+			this.app,
+			notePath,
+			tFrontmatter(parseYaml(templateBuild(this.settings.yamlTemplate, variables))) +
+				"\n" +
+				content
+		);
 	}
 
 	async playAnime(currentFile: TFile) {
@@ -167,12 +166,8 @@ export default class AnimeParserPlugin extends Plugin {
 		const paths = itemContexts.map((item) => item.match(new RegExp("\\((.*?)\\)"))[1]);
 
 		const videoUrl = paths[progress];
-		await this.app.workspace.getLeaf().setViewState({
-			type: "mx-url-video",
-			state: {
-				source: videoUrl,
-			},
-		});
+
+		open(this.app, videoUrl);
 	}
 
 	async syncBangumi(currentFile: TFile) {

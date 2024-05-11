@@ -1,12 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { App, Menu, TFile, parseYaml } from "obsidian";
+import { App, FrontMatterCache, Menu, TFile, parseYaml } from "obsidian";
 import { AnimeParserSettings } from "../settings/settings";
-import { tFrontmatter, templateWithVariables } from "../utils/obsidianUtils";
+import { createNote, openNote, tFrontmatter, templateBuild } from "../utils/obsidianUtils";
+import { open } from "../utils/mediaExtendedUtils";
+import { P } from "../utils/path";
 
 export class BangumiMatrix {
 	noteFile: TFile;
-	frontmatter: any;
+	frontmatter: FrontMatterCache;
 	constructor(private app: App, private settings: AnimeParserSettings) {}
 
 	async process(element: HTMLElement, context: any) {
@@ -22,93 +24,66 @@ export class BangumiMatrix {
 	}
 
 	private createMatrixFromList(list: HTMLElement, progress: number) {
+		const app = this.app;
+
 		const listItems = list.findAll("li");
 		const numRows = Math.ceil(listItems.length / 3);
-		const wrapper = this.createWrapper();
+		const eps = createDiv({ cls: "bangumi-matrix-wrapper" });
 		for (let i = 0; i < numRows; i++) {
-			const row = this.createRow();
+			const row = createDiv({ cls: "bangumi-matrix-row" });
 			for (let j = 0; j < 3; j++) {
 				const index = i * 3 + j;
 				const listItem = listItems[index];
 				if (listItem) {
-					const listItemWrapper = this.createListItemWrapper(progress, listItem, index);
-					listItemWrapper.addEventListener("click", () => this.handleCardClick(listItem));
-					listItemWrapper.addEventListener("contextmenu", (event) => {
-						event.preventDefault();
-						this.handleCardRightClick(listItem, event, index);
+					const url = listItem.childNodes[1]["ariaLabel"];
+					const epItem = createEl("a", {
+						text: listItem.innerText,
+						attr: { url: url, index: index },
+						cls: ["bangumi-list-item-wrapper"].concat(
+							`${index < progress ? "completed" : "pending"}`
+						),
 					});
-					row.appendChild(listItemWrapper);
+					epItem.addEventListener("click", function () {
+						open(app, this.getAttribute("url"));
+					});
+					epItem.addEventListener("contextmenu", (event) => {
+						this.handleCardRightClick(listItem, event);
+					});
+					row.appendChild(epItem);
 				}
 			}
-			wrapper.appendChild(row);
+			eps.appendChild(row);
 		}
-		return { wrapper };
+		return { wrapper: eps };
 	}
 
-	private createWrapper() {
-		const flexWrapper = document.createElement("div");
-		flexWrapper.className = "bangumi-matrix-wrapper";
-		return flexWrapper;
-	}
-
-	private createRow() {
-		const rowDiv = document.createElement("div");
-		rowDiv.className = "bangumi-matrix-row";
-		return rowDiv;
-	}
-
-	private createListItemWrapper(progress: number, listItem: HTMLElement, index: number) {
-		const wrapper = document.createElement("a");
-		wrapper.classList.add("bangumi-list-item-wrapper");
-		wrapper.classList.add(`${index < progress ? "completed" : "pending"}`);
-		wrapper.textContent = listItem.innerText;
-		return wrapper;
-	}
-
-	private async handleCardClick(listItem) {
-		const url = listItem.childNodes[1].ariaLabel;
-
-		await this.app.workspace.getLeaf().setViewState({
-			type: "mx-url-video",
-			state: {
-				source: url,
-			},
-		});
-	}
-	private handleCardRightClick(listItem, event, index) {
+	private handleCardRightClick(listItem: HTMLElement, event: MouseEvent) {
 		const menu = new Menu();
 		menu.addItem((item) =>
 			item
 				.setTitle("打开笔记")
 				.setIcon("pen")
 				.onClick(async () => {
-					const commentFolder = this.settings.savePath + "/" + this.noteFile.basename;
-					const commentPath = commentFolder + "/" + listItem.innerText + ".md";
-					const url = listItem.childNodes[1].ariaLabel;
-					console.log(commentFolder);
-					if (!this.app.vault.getAbstractFileByPath(commentFolder)) {
-						await this.app.vault.createFolder(commentFolder);
-					}
-					if (!this.app.vault.getAbstractFileByPath(commentPath)) {
-						await this.app.vault.create(
-							commentPath,
-							tFrontmatter(
-								parseYaml(
-									templateWithVariables(this.settings.notePropertysTemplate, {
-										url: url,
-										title: this.noteFile.basename,
-									})
-								)
+					const commentPath = P(
+						this.settings.savePath,
+						this.noteFile.basename,
+						listItem.innerText
+					).withSuffix("md").string;
+					const url = listItem.childNodes[1]["ariaLabel"];
+
+					await createNote(
+						this.app,
+						commentPath,
+						tFrontmatter(
+							parseYaml(
+								templateBuild(this.settings.noteYamlTemplate, {
+									url: url,
+									title: this.noteFile.basename,
+								})
 							)
-						);
-					}
-					this.app.workspace.getLeaf().setViewState({
-						type: "markdown",
-						state: {
-							file: commentPath,
-							mode: "source",
-						},
-					});
+						)
+					);
+					openNote(this.app, commentPath);
 				})
 		);
 		menu.addItem((item) =>
@@ -118,7 +93,10 @@ export class BangumiMatrix {
 				.onClick(() => {
 					const progress = this.frontmatter.progress;
 					this.app.vault.process(this.noteFile, (data) =>
-						data.replace(`progress: ${progress}`, `progress: ${index + 1}`)
+						data.replace(
+							`progress: ${progress}`,
+							`progress: ${listItem.getAttribute("index") + 1}`
+						)
 					);
 				})
 		);

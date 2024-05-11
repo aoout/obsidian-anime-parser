@@ -35,8 +35,8 @@ export class AnimeParserSettingTab extends PluginSettingTab {
 			.setName("propertysTemplate")
 			.setDesc("propertysTemplate")
 			.addTextArea((text) =>
-				text.setValue(this.plugin.settings.propertysTemplate).onChange(async (value) => {
-					this.plugin.settings.propertysTemplate = value;
+				text.setValue(this.plugin.settings.yamlTemplate).onChange(async (value) => {
+					this.plugin.settings.yamlTemplate = value;
 					await this.plugin.saveSettings();
 				})
 			);
@@ -44,8 +44,8 @@ export class AnimeParserSettingTab extends PluginSettingTab {
 			.setName("notePropertysTemplate")
 			.setDesc("notePropertysTemplate")
 			.addTextArea((text) =>
-				text.setValue(this.plugin.settings.notePropertysTemplate).onChange(async (value) => {
-					this.plugin.settings.notePropertysTemplate = value;
+				text.setValue(this.plugin.settings.noteYamlTemplate).onChange(async (value) => {
+					this.plugin.settings.noteYamlTemplate = value;
 					await this.plugin.saveSettings();
 				})
 			);
