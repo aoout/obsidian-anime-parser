@@ -25,15 +25,25 @@ export default class AnimeParserPlugin extends Plugin {
 		this.addCommand({
 			id: "play the anime",
 			name: "Play the anime from current episode",
-			callback: async () => {
-				await this.playAnime(this.app.workspace.getActiveFile());
+			checkCallback: (checking) => {
+				const activeFile = this.app.workspace.getActiveFile();
+				if(!activeFile) return false;
+				if(!this.app.metadataCache.getFileCache(activeFile).frontmatter?.bangumiID) return false;
+				if(checking) return true;
+				this.playAnime(activeFile);
+				return true;
 			},
 		});
 		this.addCommand({
 			id: "sync the bangumi",
 			name: "Sync the progress of current anime to bangumi",
-			callback: async () => {
-				await this.syncBangumi(this.app.workspace.getActiveFile());
+			checkCallback: (checking) => {
+				const activeFile = this.app.workspace.getActiveFile();
+				if(!activeFile) return false;
+				if(!this.app.metadataCache.getFileCache(activeFile).frontmatter?.bangumiID) return false;
+				if(checking) return true;
+				this.syncBangumi(activeFile);
+				return true;
 			},
 		});
 		this.registerMarkdownPostProcessor((element, context) => {
