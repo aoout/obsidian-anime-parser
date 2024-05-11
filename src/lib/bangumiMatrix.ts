@@ -47,7 +47,7 @@ export class BangumiMatrix {
 						open(app, this.getAttribute("url"));
 					});
 					epItem.addEventListener("contextmenu", (event) => {
-						this.handleCardRightClick(listItem, event);
+						this.handleCardRightClick(epItem, event);
 					});
 					row.appendChild(epItem);
 				}
@@ -57,7 +57,7 @@ export class BangumiMatrix {
 		return { wrapper: eps };
 	}
 
-	private handleCardRightClick(listItem: HTMLElement, event: MouseEvent) {
+	private handleCardRightClick(epItem: HTMLElement, event: MouseEvent) {
 		const menu = new Menu();
 		menu.addItem((item) =>
 			item
@@ -67,9 +67,9 @@ export class BangumiMatrix {
 					const commentPath = P(
 						this.settings.savePath,
 						this.noteFile.basename,
-						listItem.innerText
-					).withSuffix("md").string;
-					const url = listItem.childNodes[1]["ariaLabel"];
+						epItem.getText()
+					).withSuffix("md",true).string;
+					const url = epItem.getAttribute("url");
 
 					await createNote(
 						this.app,
@@ -95,7 +95,7 @@ export class BangumiMatrix {
 					this.app.vault.process(this.noteFile, (data) =>
 						data.replace(
 							`progress: ${progress}`,
-							`progress: ${listItem.getAttribute("index") + 1}`
+							`progress: ${epItem.getAttribute("index") + 1}`
 						)
 					);
 				})
