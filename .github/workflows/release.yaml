@@ -23,7 +23,7 @@ jobs:
     if: (github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && !inputs.bump)
     uses: lisandra-dev/reusable-workflows/.github/workflows/obsidian-plugin-release.yaml@main
     with:
-      PLUGIN_NAME: the-plugin
+      PLUGIN_NAME: anime-parser
       STYLE: false
       BETA: ${{ inputs.beta || false}}
     secrets:
