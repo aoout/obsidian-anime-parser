@@ -95,7 +95,7 @@ export class BangumiMatrix {
 					this.app.vault.process(this.noteFile, (data) =>
 						data.replace(
 							`progress: ${progress}`,
-							`progress: ${epItem.getAttribute("index") + 1}`
+							`progress: ${Number(epItem.getAttribute("index")) + 1}`
 						)
 					);
 				})
