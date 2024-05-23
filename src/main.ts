@@ -72,7 +72,7 @@ export default class AnimeParserPlugin extends Plugin {
 		const { id } = await bangumiApi.search(name);
 
 		const {
-			images: { common: cover },
+			images: { large: cover },
 			summary,
 			tags: tagNames,
 			total_episodes: totalEps,
