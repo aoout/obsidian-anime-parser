@@ -1,5 +1,7 @@
 # Anime Parser
 
+> [!WARNING]
+> This is for my personal use and may contain serious bugs, please do not use it. If you really want to use it, please open an issue.
 
 Parse a local directory to a anime.
 
