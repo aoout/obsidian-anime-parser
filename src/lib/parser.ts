@@ -1,4 +1,4 @@
-import { Path } from "../utils/path";
+import * as path from "path";
 
 export function parseEpisode(fileNames: string[], start:number): string[] {
 	const backup = [...fileNames];
@@ -9,7 +9,7 @@ export function parseEpisode(fileNames: string[], start:number): string[] {
 		const episode = fileNames
 			.map((fileName) => ({
 				fileName,
-				count: new Path(fileName).stem.split(index.toString()).length - 1,
+				count: path.basename(fileName).split(index.toString()).length - 1,
 			}))
 			.reduce((a, b) => (a.count > b.count ? a : b)).fileName;
 		fileNames.splice(fileNames.indexOf(episode), 1);

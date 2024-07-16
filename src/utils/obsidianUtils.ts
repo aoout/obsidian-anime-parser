@@ -1,5 +1,5 @@
-import { stringifyYaml, request, Pos, EditorRange, App } from "obsidian";
-import { P } from "./path";
+import { stringifyYaml, request, Pos, EditorRange, App, normalizePath } from "obsidian";
+import * as path from "path";
 
 export function tFrontmatter(propertys: unknown) {
 	return "---\n" + stringifyYaml(propertys) + "\n---";
@@ -75,14 +75,17 @@ export function openNote(app: App, path: string) {
 	});
 }
 
-export async function createFolder(app: App, path: string) {
-	if (app.vault.getFolderByPath(path)) return;
-	if (!app.vault.getFolderByPath(P(path).parent.string)) await createFolder(app, path);
-	await app.vault.createFolder(path);
+export async function createFolder(app: App, folderPath: string) {
+	folderPath = normalizePath(folderPath);
+	console.log(folderPath);
+	if (app.vault.getFolderByPath(folderPath)) return;
+	if (!(app.vault.getFolderByPath(path.dirname(folderPath)) || path.dirname(folderPath) == ".")) await createFolder(app, path.dirname(folderPath));
+	await app.vault.createFolder(folderPath);
 }
 
-export async function createNote(app: App, path: string, content: string) {
-	if (app.vault.getFileByPath(path)) return;
-	if (!app.vault.getFolderByPath(P(path).parent.string)) await createFolder(app, path);
-	await app.vault.create(path, content);
+export async function createNote(app: App, notePath: string, content: string) {
+	notePath = normalizePath(notePath);
+	if (app.vault.getFileByPath(notePath)) return;
+	if (!app.vault.getFolderByPath(path.dirname(notePath))) await createFolder(app, path.dirname(notePath));
+	await app.vault.create(notePath, content);
 }
