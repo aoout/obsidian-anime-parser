@@ -6,7 +6,7 @@ import { parseEpisode } from "./lib/parser";
 import { AnimeParserSettings, DEFAULT_SETTINGS } from "./settings/settings";
 import { AnimeParserSettingTab } from "./settings/settingsTab";
 import { createNote, pos2EditorRange, tFrontmatter, templateBuild } from "./utils/obsidianUtils";
-import { P, Path } from "./utils/path";
+import * as path from "path";
 import { generatePaddedSequence } from "./utils/utils";
 import { open } from "./utils/mediaExtendedUtils";
 
@@ -67,7 +67,7 @@ export default class AnimeParserPlugin extends Plugin {
 		}
 	}
 	async parseAnime(name: string) {
-		const path = new Path(this.settings.libraryPath, name).string;
+		const animePath = path.join(this.settings.libraryPath, name);
 
 		const { id } = await bangumiApi.search(name);
 
@@ -85,13 +85,12 @@ export default class AnimeParserPlugin extends Plugin {
 
 		const videoExtensions = ["*.mp4", "*.mkv"];
 
-		const videos = jetpack.find(path, { matching: videoExtensions });
-		const suffix = P(videos[0]).suffix;
+		const videos = jetpack.find(animePath, { matching: videoExtensions });
+		const suffix = path.extname(videos[0]);
 
 		const epIndexs = generatePaddedSequence(totalEps);
-		console.log(epIndexs);
 
-		const unprocessedVideos = videos.filter((video) => !epIndexs.includes(P(video).stem));
+		const unprocessedVideos = videos.filter((video) => !epIndexs.includes(path.basename(video, suffix)));
 
 		if (unprocessedVideos.length) {
 			let parsedVideos;
@@ -100,34 +99,38 @@ export default class AnimeParserPlugin extends Plugin {
 			if (allUnprocessed) {
 				parsedVideos = parseEpisode(videos, 1);
 				parsedVideos.forEach((video, i) =>
-					jetpack.rename(video, P(epIndexs[i]).withSuffix(suffix).string)
+					jetpack.rename(video, epIndexs[i] + suffix)
 				);
 			} else {
-				const of = jetpack.find(path, { matching: ["*.of"] });
-				const processedVideos = videos.filter((video) => epIndexs.includes(P(video).stem));
+				const of = jetpack.find(animePath, { matching: ["*.of"] });
+				const processedVideos = videos.filter((video) => epIndexs.includes(path.basename(video, suffix)));
 				const maxProcessedEpisode = Math.max(
-					...processedVideos.map((video) => parseInt(P(video).stem))
+					...processedVideos.map((video) => parseInt(path.basename(video, suffix)))
 				);
+				console.log("max",maxProcessedEpisode);
 
 				const parsedEpisodes = parseEpisode(
 					unprocessedVideos.concat(of),
 					maxProcessedEpisode
 				);
+				console.log("parsed", parsedEpisodes);
 				parsedVideos = [...parsedEpisodes.slice(1)];
 
 				unprocessedVideos.forEach((_, i) =>
 					jetpack.rename(
 						parsedVideos[i],
-						P(epIndexs[maxProcessedEpisode + i]).withSuffix(suffix).string
+						epIndexs[maxProcessedEpisode + i] + suffix
 					)
 				);
 			}
 
 			if (videos.length < totalEps) {
 				jetpack
-					.find(path, { matching: ["*.of"], recursive: false })
+					.find(animePath, { matching: ["*.of"], recursive: false })
 					.forEach(jetpack.remove);
-				new Path(parsedVideos.slice(-1)[0]).withSuffix(".of").write("");
+				const ofPath = path.join(animePath, path.basename(parsedVideos.slice(-1)[0], suffix) + ".of");
+				console.log(ofPath);
+				jetpack.write(ofPath,"");
 			}
 		}
 
@@ -136,7 +139,7 @@ export default class AnimeParserPlugin extends Plugin {
 			.map(
 				(video, index) =>
 					`- [ep${index + 1}. ${episodeNames[index]}](${
-						"mx://animes/" + name.replaceAll(" ", "%20") + "/" + video + "." + suffix
+						"mx://animes/" + name.replaceAll(" ", "%20") + "/" + video + suffix
 					})`
 			)
 			.join("\n");
@@ -150,7 +153,7 @@ export default class AnimeParserPlugin extends Plugin {
 		};
 
 		const notePath = this.settings.savePath
-			? new Path("/", this.settings.savePath, name).withSuffix("md").string
+			? path.join("/", this.settings.savePath, name + ".md")
 			: name + ".md";
 
 		await createNote(
