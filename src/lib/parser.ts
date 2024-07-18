@@ -1,66 +1,16 @@
-import * as path from "path";
-
 export function parseEpisode(fileNames: string[]): string[] {
 	const backup = [...fileNames];
-	const commonSubstrings = findAllCommonSubstrings(fileNames);
-	const fileNameMap = new Map();
-	fileNames = fileNames.map((fileName) => {
-		let modifiedFileName = fileName;
-		commonSubstrings.forEach((subString) => {
-			modifiedFileName = modifiedFileName.replace(subString, "");
-		});
-		fileNameMap.set(modifiedFileName, fileName);
-		return modifiedFileName;
-	});
-
-	let maxEp = 0;
+	const episodeMap = new Map();
 	fileNames.forEach(fileName => {
-		const numbers = fileName.match(/\d+/g).map(Number);
-		const max = Math.max(...numbers);
-		if (max > maxEp) {
-			maxEp = max;
+		const match = fileName.match(
+			/(?![^ \[]])(第|未删减|_)?(?P<episode>\d+)(话|話|集|v2|先行版)?(?![^ \]])/
+		);
+		if (match) {
+			episodeMap.set(fileName, Number(match[1]));
 		}
 	});
-	const startEp = maxEp - fileNames.length + 1;
-	const indexs = Array.from({ length: fileNames.length }, (_, index) => index + startEp);
-	const episodes: string[] = [];
-	for (let i = indexs.length - 1; i >= 0; i--) {
-		const index = indexs[i];
-		const episode = fileNames
-			.map((fileName) => ({
-				fileName,
-				count: path.basename(fileName).split(index.toString()).length - 1,
-			}))
-			.reduce((a, b) => (a.count > b.count ? a : b)).fileName;
-		fileNames.splice(fileNames.indexOf(episode), 1);
-		episodes.push(fileNameMap.get(episode));
-	}
+	const episodes = Array.from(episodeMap.entries()).sort((a, b) => a[1] - b[1]).map(([fileName]) => fileName);
+	fileNames.forEach((fileName)=>fileNames.remove(fileName));
 	fileNames.push(...backup);
 	return episodes.reverse();
-}
-
-function findAllCommonSubstrings(strings: string[]): string[] {
-	if (strings.length === 0) return [];
-
-	const shortest = strings.reduce((a, b) => (a.length <= b.length ? a : b));
-
-	const commonSubstrings = new Set<string>();
-
-	for (let length = shortest.length; length > 0; length--) {
-		for (let start = 0; start <= shortest.length - length; start++) {
-			const substring = shortest.substring(start, start + length);
-			if (strings.every((str) => str.includes(substring))) {
-				commonSubstrings.add(substring);
-			}
-		}
-	}
-
-	const result: string[] = [];
-	for (const substr of commonSubstrings) {
-		if (!Array.from(commonSubstrings).some((s) => s !== substr && s.includes(substr))) {
-			result.push(substr);
-		}
-	}
-
-	return result;
 }
