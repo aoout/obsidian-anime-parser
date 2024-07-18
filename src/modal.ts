@@ -1,5 +1,5 @@
-import { App, SuggestModal } from "obsidian";
 import jetpack from "fs-jetpack";
+import { App, SuggestModal } from "obsidian";
 
 export class AnimeParserModal extends SuggestModal<string> {
 	libraryPath: string;

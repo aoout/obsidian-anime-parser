@@ -1,15 +1,15 @@
 import jetpack from "fs-jetpack";
 import { Notice, Plugin, TFile, parseYaml } from "obsidian";
+import * as path from "path";
 import bangumiApi from "./lib/bangumiApi";
 import { BangumiMatrix } from "./lib/bangumiMatrix";
 import { parseEpisode } from "./lib/parser";
+import { AnimeParserModal } from "./modal";
 import { AnimeParserSettings, DEFAULT_SETTINGS } from "./settings/settings";
 import { AnimeParserSettingTab } from "./settings/settingsTab";
-import { createNote, pos2EditorRange, tFrontmatter, templateBuild } from "./utils/obsidianUtils";
-import * as path from "path";
-import { generatePaddedSequence } from "./utils/utils";
 import { open } from "./utils/mediaExtendedUtils";
-import { AnimeParserModal } from "./modal";
+import { createNote, pos2EditorRange, tFrontmatter, templateBuild } from "./utils/obsidianUtils";
+import { generatePaddedSequence } from "./utils/utils";
 
 export default class AnimeParserPlugin extends Plugin {
 	settings: AnimeParserSettings;
@@ -37,9 +37,10 @@ export default class AnimeParserPlugin extends Plugin {
 			name: "Play the anime from current episode",
 			checkCallback: (checking) => {
 				const activeFile = this.app.workspace.getActiveFile();
-				if(!activeFile) return false;
-				if(!this.app.metadataCache.getFileCache(activeFile).frontmatter?.bangumiID) return false;
-				if(checking) return true;
+				if (!activeFile) return false;
+				if (!this.app.metadataCache.getFileCache(activeFile).frontmatter?.bangumiID)
+					return false;
+				if (checking) return true;
 				this.playAnime(activeFile);
 				return true;
 			},
@@ -49,9 +50,10 @@ export default class AnimeParserPlugin extends Plugin {
 			name: "Sync the progress of current anime to bangumi",
 			checkCallback: (checking) => {
 				const activeFile = this.app.workspace.getActiveFile();
-				if(!activeFile) return false;
-				if(!this.app.metadataCache.getFileCache(activeFile).frontmatter?.bangumiID) return false;
-				if(checking) return true;
+				if (!activeFile) return false;
+				if (!this.app.metadataCache.getFileCache(activeFile).frontmatter?.bangumiID)
+					return false;
+				if (checking) return true;
 				this.syncBangumi(activeFile);
 				return true;
 			},
@@ -100,7 +102,9 @@ export default class AnimeParserPlugin extends Plugin {
 
 		const epIndexs = generatePaddedSequence(totalEps);
 
-		const unprocessedVideos = videos.filter((video) => !epIndexs.includes(path.basename(video, suffix)));
+		const unprocessedVideos = videos.filter(
+			(video) => !epIndexs.includes(path.basename(video, suffix))
+		);
 
 		if (unprocessedVideos.length) {
 			let parsedVideos;
@@ -108,16 +112,16 @@ export default class AnimeParserPlugin extends Plugin {
 
 			if (allUnprocessed) {
 				parsedVideos = parseEpisode(videos, 1);
-				parsedVideos.forEach((video, i) =>
-					jetpack.rename(video, epIndexs[i] + suffix)
-				);
+				parsedVideos.forEach((video, i) => jetpack.rename(video, epIndexs[i] + suffix));
 			} else {
 				const of = jetpack.find(animePath, { matching: ["*.of"] });
-				const processedVideos = videos.filter((video) => epIndexs.includes(path.basename(video, suffix)));
+				const processedVideos = videos.filter((video) =>
+					epIndexs.includes(path.basename(video, suffix))
+				);
 				const maxProcessedEpisode = Math.max(
 					...processedVideos.map((video) => parseInt(path.basename(video, suffix)))
 				);
-				console.log("max",maxProcessedEpisode);
+				console.log("max", maxProcessedEpisode);
 
 				const parsedEpisodes = parseEpisode(
 					unprocessedVideos.concat(of),
@@ -127,10 +131,7 @@ export default class AnimeParserPlugin extends Plugin {
 				parsedVideos = [...parsedEpisodes.slice(1)];
 
 				unprocessedVideos.forEach((_, i) =>
-					jetpack.rename(
-						parsedVideos[i],
-						epIndexs[maxProcessedEpisode + i] + suffix
-					)
+					jetpack.rename(parsedVideos[i], epIndexs[maxProcessedEpisode + i] + suffix)
 				);
 			}
 
@@ -138,9 +139,12 @@ export default class AnimeParserPlugin extends Plugin {
 				jetpack
 					.find(animePath, { matching: ["*.of"], recursive: false })
 					.forEach(jetpack.remove);
-				const ofPath = path.join(animePath, path.basename(parsedVideos.slice(-1)[0], suffix) + ".of");
+				const ofPath = path.join(
+					animePath,
+					path.basename(parsedVideos.slice(-1)[0], suffix) + ".of"
+				);
 				console.log(ofPath);
-				jetpack.write(ofPath,"");
+				jetpack.write(ofPath, "");
 			}
 		}
 

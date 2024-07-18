@@ -1,6 +1,6 @@
 import * as path from "path";
 
-export function parseEpisode(fileNames: string[], start:number): string[] {
+export function parseEpisode(fileNames: string[], start: number): string[] {
 	const backup = [...fileNames];
 	const indexs = Array.from({ length: fileNames.length }, (_, index) => index + start);
 	const episodes: string[] = [];

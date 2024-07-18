@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { App, FrontMatterCache, Menu, TFile, parseYaml } from "obsidian";
-import { AnimeParserSettings } from "../settings/settings";
-import { createNote, openNote, tFrontmatter, templateBuild } from "../utils/obsidianUtils";
-import { open } from "../utils/mediaExtendedUtils";
 import * as path from "path";
+import { AnimeParserSettings } from "../settings/settings";
+import { open } from "../utils/mediaExtendedUtils";
+import { createNote, openNote, tFrontmatter, templateBuild } from "../utils/obsidianUtils";
 
 export class BangumiMatrix {
 	noteFile: TFile;
@@ -64,7 +64,12 @@ export class BangumiMatrix {
 				.setTitle("打开笔记")
 				.setIcon("pen")
 				.onClick(async () => {
-					const commentPath = path.join(this.settings.savePath, this.noteFile.basename, epItem.getText()) + ".md";
+					const commentPath =
+						path.join(
+							this.settings.savePath,
+							this.noteFile.basename,
+							epItem.getText()
+						) + ".md";
 					const url = epItem.getAttribute("url");
 
 					await createNote(

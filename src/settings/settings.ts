@@ -9,7 +9,8 @@ export interface AnimeParserSettings {
 export const DEFAULT_SETTINGS: AnimeParserSettings = {
 	libraryPath: "",
 	savePath: "",
-	yamlTemplate: "playlist: true\ncover: {{cover}}\nbangumiID: {{id}}\nepisodeNum: {{epNum}}\nprogress: 0",
+	yamlTemplate:
+		"playlist: true\ncover: {{cover}}\nbangumiID: {{id}}\nepisodeNum: {{epNum}}\nprogress: 0",
 	noteYamlTemplate: "video: {{url}}",
-	accessToken: ""
+	accessToken: "",
 };

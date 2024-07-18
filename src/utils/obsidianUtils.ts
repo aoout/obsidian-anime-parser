@@ -1,4 +1,4 @@
-import { stringifyYaml, request, Pos, EditorRange, App, normalizePath } from "obsidian";
+import { App, EditorRange, Pos, normalizePath, request, stringifyYaml } from "obsidian";
 import * as path from "path";
 
 export function tFrontmatter(propertys: unknown) {
@@ -79,13 +79,15 @@ export async function createFolder(app: App, folderPath: string) {
 	folderPath = normalizePath(folderPath);
 	console.log(folderPath);
 	if (app.vault.getFolderByPath(folderPath)) return;
-	if (!(app.vault.getFolderByPath(path.dirname(folderPath)) || path.dirname(folderPath) == ".")) await createFolder(app, path.dirname(folderPath));
+	if (!(app.vault.getFolderByPath(path.dirname(folderPath)) || path.dirname(folderPath) == "."))
+		await createFolder(app, path.dirname(folderPath));
 	await app.vault.createFolder(folderPath);
 }
 
 export async function createNote(app: App, notePath: string, content: string) {
 	notePath = normalizePath(notePath);
 	if (app.vault.getFileByPath(notePath)) return;
-	if (!app.vault.getFolderByPath(path.dirname(notePath))) await createFolder(app, path.dirname(notePath));
+	if (!app.vault.getFolderByPath(path.dirname(notePath)))
+		await createFolder(app, path.dirname(notePath));
 	await app.vault.create(notePath, content);
 }

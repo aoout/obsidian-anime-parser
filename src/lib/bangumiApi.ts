@@ -15,7 +15,7 @@ export default class bangumiApi {
 				"Content-Type": "application/json",
 			},
 			{
-				type: 2
+				type: 2,
 			}
 		);
 		let result = animes["list"].find((anime) => caseInsensitiveEqual(anime["name_cn"], name));
