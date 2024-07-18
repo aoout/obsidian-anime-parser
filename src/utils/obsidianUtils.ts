@@ -77,7 +77,6 @@ export function openNote(app: App, path: string) {
 
 export async function createFolder(app: App, folderPath: string) {
 	folderPath = normalizePath(folderPath);
-	console.log(folderPath);
 	if (app.vault.getFolderByPath(folderPath)) return;
 	if (!(app.vault.getFolderByPath(path.dirname(folderPath)) || path.dirname(folderPath) == "."))
 		await createFolder(app, path.dirname(folderPath));

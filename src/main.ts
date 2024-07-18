@@ -121,13 +121,11 @@ export default class AnimeParserPlugin extends Plugin {
 				const maxProcessedEpisode = Math.max(
 					...processedVideos.map((video) => parseInt(path.basename(video, suffix)))
 				);
-				console.log("max", maxProcessedEpisode);
 
 				const parsedEpisodes = parseEpisode(
 					unprocessedVideos.concat(of),
 					maxProcessedEpisode
 				);
-				console.log("parsed", parsedEpisodes);
 				parsedVideos = [...parsedEpisodes.slice(1)];
 
 				unprocessedVideos.forEach((_, i) =>
@@ -143,7 +141,6 @@ export default class AnimeParserPlugin extends Plugin {
 					animePath,
 					path.basename(parsedVideos.slice(-1)[0], suffix) + ".of"
 				);
-				console.log(ofPath);
 				jetpack.write(ofPath, "");
 			}
 		}
