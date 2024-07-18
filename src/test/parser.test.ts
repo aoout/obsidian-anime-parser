@@ -15,7 +15,7 @@ describe("testing the episode parser", () => {
 
 	test("test the parsing of episode names for season n (n>1)", () => {
 		const fileNames1 = [];
-		generatePaddedSequence(13)
+		generatePaddedSequence(24)
 			.slice(11)
 			.forEach((index) => {
 				fileNames1.push(
