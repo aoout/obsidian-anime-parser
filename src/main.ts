@@ -111,7 +111,7 @@ export default class AnimeParserPlugin extends Plugin {
 			const allUnprocessed = unprocessedVideos.length === videos.length;
 
 			if (allUnprocessed) {
-				parsedVideos = parseEpisode(videos, 1);
+				parsedVideos = parseEpisode(videos);
 				parsedVideos.forEach((video, i) => jetpack.rename(video, epIndexs[i] + suffix));
 			} else {
 				const of = jetpack.find(animePath, { matching: ["*.of"] });
@@ -123,8 +123,7 @@ export default class AnimeParserPlugin extends Plugin {
 				);
 
 				const parsedEpisodes = parseEpisode(
-					unprocessedVideos.concat(of),
-					maxProcessedEpisode
+					unprocessedVideos.concat(of)
 				);
 				parsedVideos = [...parsedEpisodes.slice(1)];
 
