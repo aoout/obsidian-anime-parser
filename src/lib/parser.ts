@@ -12,10 +12,15 @@ export function parseEpisode(fileNames: string[]): string[] {
 		fileNameMap.set(modifiedFileName, fileName);
 		return modifiedFileName;
 	});
-	let maxEp = 1;
-	while (fileNames.some((fileName) => fileName.includes(maxEp.toString()))) {
-		maxEp++;
-	}
+
+	let maxEp = 0;
+	fileNames.forEach(fileName => {
+		const numbers = fileName.match(/\d+/g).map(Number);
+		const max = Math.max(...numbers);
+		if (max > maxEp) {
+			maxEp = max;
+		}
+	});
 	const startEp = maxEp - fileNames.length + 1;
 	const indexs = Array.from({ length: fileNames.length }, (_, index) => index + startEp);
 	const episodes: string[] = [];
