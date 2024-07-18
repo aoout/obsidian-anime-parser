@@ -12,12 +12,14 @@
 		"preexport": "npm run build",
 		"export": "node export.js",
 		"predeploy": "npm run bump",
-		"deploy": "npm run export"
+		"deploy": "npm run export",
+		"test": "jest"
 	},
 	"keywords": [],
 	"author": "",
 	"license": "MIT",
 	"devDependencies": {
+		"@types/jest": "^29.5.12",
 		"@types/node": "^20.8.6",
 		"@types/unzipper": "^0.10.9",
 		"@types/xml2js": "^0.4.12",
@@ -35,11 +37,14 @@
 		"eslint-plugin-jsonc": "^2.8.0",
 		"eslint-plugin-node": "^11.1.0",
 		"eslint-plugin-promise": "^6.1.1",
+		"jest": "^29.7.0",
 		"obsidian": "latest",
 		"obsidian-plugin-cli": "latest",
+		"ts-jest": "^29.2.2",
 		"typescript": "^5.0.4"
 	},
 	"dependencies": {
-		"fs-jetpack": "^5.1.0"
+		"fs-jetpack": "^5.1.0",
+		"ts-node": "^10.9.2"
 	}
 }
