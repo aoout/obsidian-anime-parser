@@ -9,12 +9,22 @@ import { createNote, pos2EditorRange, tFrontmatter, templateBuild } from "./util
 import * as path from "path";
 import { generatePaddedSequence } from "./utils/utils";
 import { open } from "./utils/mediaExtendedUtils";
+import { AnimeParserModal } from "./modal";
 
 export default class AnimeParserPlugin extends Plugin {
 	settings: AnimeParserSettings;
 	async onload() {
 		await this.loadSettings();
 		this.addSettingTab(new AnimeParserSettingTab(this.app, this));
+		this.addCommand({
+			id: "import a anime",
+			name: "Import a anime to obsidian",
+			callback: async () => {
+				new AnimeParserModal(this.app, this.settings.libraryPath, async (result) => {
+					await this.parseAnime(result);
+				}).open();
+			},
+		});
 		this.addCommand({
 			id: "sync the animes library",
 			name: "Sync the animes library to obsidian",
