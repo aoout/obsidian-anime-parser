@@ -123,7 +123,7 @@ export default class AnimeParserPlugin extends Plugin {
 				);
 
 				const parsedEpisodes = parseEpisode(
-					unprocessedVideos.concat(of)
+					of.concat(unprocessedVideos)
 				);
 				parsedVideos = [...parsedEpisodes.slice(1)];
 
