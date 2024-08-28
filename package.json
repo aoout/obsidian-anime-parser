@@ -1,6 +1,6 @@
 {
 	"name": "anime-parser",
-	"version": "0.2.7",
+	"version": "0.2.8",
 	"description": "Parse a local directory to a anime.",
 	"main": "main.js",
 	"scripts": {
