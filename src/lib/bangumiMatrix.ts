@@ -65,7 +65,7 @@ export class BangumiMatrix {
 				.setIcon("pen")
 				.onClick(async () => {
 					const commentPath =
-						path.join(
+						path.posix.join(
 							this.settings.savePath,
 							this.noteFile.basename,
 							epItem.getText()
