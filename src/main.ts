@@ -122,9 +122,7 @@ export default class AnimeParserPlugin extends Plugin {
 					...processedVideos.map((video) => parseInt(path.basename(video, suffix)))
 				);
 
-				const parsedEpisodes = parseEpisode(
-					of.concat(unprocessedVideos)
-				);
+				const parsedEpisodes = parseEpisode(of.concat(unprocessedVideos));
 				parsedVideos = [...parsedEpisodes.slice(1)];
 
 				unprocessedVideos.forEach((_, i) =>
@@ -163,17 +161,23 @@ export default class AnimeParserPlugin extends Plugin {
 		};
 
 		const notePath = this.settings.savePath
-			? path.join("/", this.settings.savePath, name + ".md")
+			? path.posix.join(this.settings.savePath, name + ".md")
 			: name + ".md";
 
-		await createNote(
-			this.app,
-			notePath,
-			tFrontmatter(parseYaml(templateBuild(this.settings.yamlTemplate, variables))) +
-				"\n" +
-				content
-		);
-		new Notice(`${name}has been imported`);
+		const existingFile = this.app.vault.getFileByPath(notePath);
+		if (!existingFile) {
+			await createNote(
+				this.app,
+				notePath,
+				tFrontmatter(parseYaml(templateBuild(this.settings.yamlTemplate, variables))) +
+					"\n" +
+					content
+			);
+		} else {
+			const frontmatter = this.app.metadataCache.getFileCache(existingFile).frontmatter;
+			await this.app.vault.modify(existingFile, tFrontmatter(frontmatter) + "\n" + content);
+		}
+		new Notice(`${name} has been ${existingFile ? "updated" : "imported"}`);
 	}
 
 	async playAnime(currentFile: TFile) {
