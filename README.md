@@ -72,6 +72,13 @@ Promise.all(
 
 Then, import animes. And you are done.
 
+<details>
+<summary>配置后具体视觉效果</summary>
+
+![](assets/image.png)
+
+</details>
+
 ## Propertys template
 
 all available variables:
