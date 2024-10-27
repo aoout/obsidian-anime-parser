@@ -7,7 +7,7 @@ Parse a local directory to a anime.
 
 ![alt text](assets/screenshot.png)
 
-## Usage
+## ⚡Usage
 
 ### Get the animes local resource that is stored correctly
 
@@ -83,3 +83,9 @@ all available variables:
 - {{tags}}
 - {{epNum}}
 ```
+
+## 🖇️Unique and stable link
+
+There are **some problems** with relying on local resource files to manage media files. What if one day I suddenly want to store my resource files in another path? What if I change computers and have the same resource files, but they cannot be recognized as the same item because of different file names? What if I share my library with others and they cannot correctly link notes to resource files?
+
+The solution I thought of is to have a unique and stable link of a certain episode of a certain anime. This plugin runs on this concept, and in a broad sense, it is of course also a kind of **File over app**.
