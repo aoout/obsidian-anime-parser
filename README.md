@@ -94,6 +94,16 @@ episodeNum: {{epNum}}
 progress: 0
 ```
 
+## 📜Helpful for Workflow
+
+### [obsidian-banners](https://github.com/noatpad/obsidian-banners)
+
+This plugin can be used to display anime cover as banner.
+
+### [obsidian-frontmatter-viewmode](https://github.com/AlexDavies8/obsidian-frontmatter-viewmode)
+
+This plugin can be used to set the default mode of a note representing an anime to read mode. In read mode, the page layout changes of the anime parser will take effect.
+
 ## 🖇️Unique and stable link
 
 There are **some problems** with relying on local resource files to manage media files. What if one day I suddenly want to store my resource files in another path? What if I change computers and have the same resource files, but they cannot be recognized as the same item because of different file names? What if I share my library with others and they cannot correctly link notes to resource files?
