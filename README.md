@@ -84,6 +84,16 @@ all available variables:
 - {{epNum}}
 ```
 
+### Example Template
+
+```
+playlist: true
+cover: {{cover}}
+bangumiID: {{id}}
+episodeNum: {{epNum}}
+progress: 0
+```
+
 ## 🖇️Unique and stable link
 
 There are **some problems** with relying on local resource files to manage media files. What if one day I suddenly want to store my resource files in another path? What if I change computers and have the same resource files, but they cannot be recognized as the same item because of different file names? What if I share my library with others and they cannot correctly link notes to resource files?
