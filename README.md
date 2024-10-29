@@ -143,3 +143,9 @@ The solution I thought of is to have a unique and stable link of a certain episo
 You can use the `Sync the progress of current anime to bangumi` command to sync your viewing progress to bangumi.
 
 In the future, there will be more data that can be synced.
+
+## ⚙️How episode parser works
+
+Relevant code for how to sort the episodes by file name is written in [parser.ts](src/lib/parser.ts). This is the important part.
+
+Rest of the relevant code is written in a [parseAnime](https://github.com/aoout/obsidian-anime-parser/blob/7905cc5e07278d2a36a1795d728a01e018aa7508/src/main.ts#L81C2-L183C3) function.
