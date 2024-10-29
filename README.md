@@ -34,6 +34,24 @@ animes
 
 **There shouldn't be any non-flat directory structure. Even different seasons of an anime.**
 
+After parsing, resource files will be renamed to a fixed format (no setting to change this is provided), this is for [🖇️Unique and stable link](#️unique-and-stable-link).
+
+```
+animes
+├── Attack_on_Titan
+│   ├── 01.mp4
+│   ├── 02.mp4
+│   └── ...
+├── One_Piece
+│   ├── 01.mp4
+│   ├── 02.mp4
+│   └── ...
+└── Sword_Art_Online
+    ├── 01.mp4
+    ├── 02.mp4
+    └── ...
+```
+
 ### Install && Set up the `media-extended` plugin
 
 Create a custom protocols, select the `folder mapping` type, and map `animes` to the directory where anime local media files are stored.
