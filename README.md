@@ -7,6 +7,8 @@ Parse a local directory to a anime.
 
 ![alt text](assets/screenshot.png)
 
+![alt text](image.png)
+
 > [!NOTE]  
 > All parsed data comes from [Bangumi](https://bangumi.tv/).
 
