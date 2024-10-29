@@ -149,3 +149,7 @@ In the future, there will be more data that can be synced.
 Relevant code for how to sort the episodes by file name is written in [parser.ts](src/lib/parser.ts). This is the important part.
 
 Rest of the relevant code is written in a [parseAnime](https://github.com/aoout/obsidian-anime-parser/blob/7905cc5e07278d2a36a1795d728a01e018aa7508/src/main.ts#L81C2-L183C3) function.
+
+## 📱Mobile support?
+
+It would be really great if the `media-extended` had mobile support. It could sync watching progress, episode notes, etc. Unfortunately, I don't know when that will be implemented.
