@@ -4,8 +4,7 @@
 	"description": "Parse a local directory to a anime.",
 	"author": "aoout",
 	"authorUrl": "https://github.com/aoout",
-
 	"isDesktopOnly": false,
 	"minAppVersion": "0.16.0",
-	"version": "0.2.8"
+	"version": "0.2.9"
 }
