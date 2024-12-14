@@ -64,12 +64,12 @@ export class BangumiMatrix {
 				.setTitle("打开笔记")
 				.setIcon("pen")
 				.onClick(async () => {
-					const commentPath =
-						path.posix.join(
-							this.settings.savePath,
-							this.noteFile.basename,
-							epItem.getText()
-						) + ".md";
+					const variables = {
+						savePath: this.settings.savePath,
+						animeName: this.noteFile.basename,
+						episodeName: epItem.getText()
+					};
+					const commentPath = templateBuild(this.settings.episodeNotePathTemplate, variables);
 					const url = epItem.getAttribute("url");
 
 					await createNote(
