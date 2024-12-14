@@ -4,6 +4,7 @@ export interface AnimeParserSettings {
 	yamlTemplate: string;
 	noteYamlTemplate: string;
 	accessToken: string;
+	episodeNotePathTemplate: string;
 }
 
 export const DEFAULT_SETTINGS: AnimeParserSettings = {
@@ -13,4 +14,5 @@ export const DEFAULT_SETTINGS: AnimeParserSettings = {
 		"playlist: true\ncover: {{cover}}\nbangumiID: {{id}}\nepisodeNum: {{epNum}}\nprogress: 0",
 	noteYamlTemplate: "video: {{url}}",
 	accessToken: "",
+	episodeNotePathTemplate: "{{savePath}}/{{animeName}}/{{episodeName}}.md",
 };

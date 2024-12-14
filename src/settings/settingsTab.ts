@@ -59,5 +59,15 @@ export class AnimeParserSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				})
 			);
+
+		new Setting(containerEl)
+			.setName("episodeNotePathTemplate")
+			.setDesc("Template for episode note path. Available variables: {{savePath}}, {{animeName}}, {{episodeName}}")
+			.addText((text) =>
+				text.setValue(this.plugin.settings.episodeNotePathTemplate).onChange(async (value) => {
+					this.plugin.settings.episodeNotePathTemplate = value;
+					await this.plugin.saveSettings();
+				})
+			);
 	}
 }
